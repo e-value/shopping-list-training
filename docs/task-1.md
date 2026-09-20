@@ -433,16 +433,19 @@ export interface Item {
 `resources/js/views/ItemListView.vue`:
 
 ```ts
-import type { Item } from '../types/item'
+import type { Item } from '../types/item'    // ← 追加（既存の import の下に）
 
-const items = ref<Item[]>([])
-const newName = ref<string>('')
-const newQuantity = ref<number>(1)
+const items = ref<Item[]>([])                 // ← ref([]) → ref<Item[]>([]) に変更
+const newName = ref<string>('')               // ← ref('') → ref<string>('') に変更
+const newQuantity = ref<number>(1)            // ← ref(1) → ref<number>(1) に変更
 
-async function removeItem(item: Item) {
+async function removeItem(item: Item) {       // ← (item) → (item: Item) に変更
   // ...
 }
 ```
+
+- `import type { Item }` は **新規追加** や。既存の `import` 文の下に追加してな
+- それ以外は **既存のコードを編集** する形や。`ref([])` → `ref<Item[]>([])` みたいに型情報を付け足すんやで
 
 `ref<Item[]>([])` で「これは Item の配列やで」、`removeItem(item: Item)` で「引数の `item` は Item 型やで」と TS に教えてるんや。
 
@@ -452,9 +455,9 @@ async function removeItem(item: Item) {
 `resources/js/views/ItemDetailView.vue`:
 
 ```ts
-import type { Item } from '../types/item'
+import type { Item } from '../types/item'    // ← 追加
 
-const item = ref<Item | null>(null)
+const item = ref<Item | null>(null)           // ← ref(null) → ref<Item | null>(null) に変更
 ```
 
 > 💡 ここでは初期値が `null`（API 取得前は何もない）なので、型を `Item | null` にしてるんやで。

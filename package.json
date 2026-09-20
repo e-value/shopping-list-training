@@ -4,13 +4,15 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "generate:types": "openapi-typescript http://laravel.test/docs/api.json -o resources/js/types/api.d.ts"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
         "@types/node": "^26.6.2",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^3.1",
+        "openapi-typescript": "^7.13.0",
         "tailwindcss": "^4.0.0",
         "typescript": "^5.9.3",
         "vite": "^8.0.0",

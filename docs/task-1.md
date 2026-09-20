@@ -2,17 +2,25 @@
 
 ## 🎯 このタスクのゴール
 
-🐘 「おはようさん、ワシや、ガネーシャや。🎵ガネ・ガネ・ガネーシャモーニング🎵を歌いながらトイレから出てきたとこや」
+🙋 「ガネーシャさん…ちょっと聞いてもらっていいですか…」
 
-🐘 「今日からお前にやってもらうのはな、Laravel + Vue 3 で書かれた買い物リストアプリの **フロントエンド（現状 JS）** を **TypeScript化** することや。バックエンドの Laravel は今日はそのまま、フロントだけ鎧を着せ替える作業やで」
+🐘 「おう、どないしたんや。朝からそんな暗い顔して」
 
-🙋 「TypeScript ですか…？正直、JS のままでもいいのかなと思うんですけど」
+🙋 「昨日、先輩に『`product_name` って冗長だから `name` に直しといて』って言われて、migration と Factory とコントローラを直したんです。DB も作り直して、API のレスポンスも `name` で返ってくるのを確認して…完璧だと思ったんです」
 
-🐘 「そう思うやろ？でもな、今日のタスクで体感してもらうけど、**型があるとコードが嘘をつかれへん** ようになるんや」
+🐘 「ほうほう、それで？」
 
-🙋 「コードが嘘をつかれへん…？」
+🙋 「今朝出社したら、先輩に『画面から商品名消えてるけど？』って言われて…。ブラウザ開いたら確かに名前が全部空白になってて。DevTools 見てもエラーなし、コンソールも真っ白で。30分くらいハマって、やっとフロントのテンプレートが `item.product_name` のままだって気づいたんです…」
 
-🐘 「『この変数、何が入っとるんやっけ？』『この API のレスポンスってどんな形やっけ？』って、JS やと毎回ファイルを開き直して確認せなアカンやろ？それが消えるんや。バグも実行する前にエディタが教えてくれるし、**コードを読む自分自身が一番ラクになる** で」
+🐘 「あー、あるあるやな。Vue のテンプレートで `{{ item.product_name }}` って書いてたけど、API が返すフィールドは `name` に変わっとる。JS は `item.product_name` が `undefined` でもエラー出さんからな。**画面に何も表示されへんだけで、沈黙するんや**」
+
+🙋 「はい…。しかも同じ `product_name` を参照してる箇所が ItemListView と ItemDetailView の両方にあって、全部で6箇所も直し漏れてました。grep で探して直しましたけど、もっと大きいプロジェクトだったらと思うとゾッとします…」
+
+🐘 「せやろ？ほんで今日な、お前にはまさにその悩みを解決する武器を教えたるわ。**TypeScript** や」
+
+🙋 「TypeScript ですか…？JS のままでもいいのかなと思ってたんですけど」
+
+🐘 「昨日のお前の失敗、TypeScript やったら **コードを書いた瞬間に** エディタが赤波線で教えてくれたんやで。実行もデプロイも要らん。`item.product_name` って書いた瞬間に『そんなプロパティないで』って怒られるからな」
 
 🙋 「実行する前に教えてくれるんですか…！それはありがたいですね」
 
@@ -89,22 +97,28 @@ resources/
 
 ---
 
-## 🔥 ウォーミングアップ: 型なしの痛みを体験
+## 🔥 ウォーミングアップ: カラム名変更で「型なしの怖さ」を追体験
 
-実装に入る前にな、ちょっと「型なし JS の気持ち悪さ」を体験させたるわ。
+実装に入る前にな、冒頭で話した「カラム名を変えたら画面が壊れた」事件を、お前自身の手で再現してもらうわ。
 
-これが地味に大事なんやで。ワシの教え子のソクラテスくんが「無知の知」言うてたやろ？「自分が何を知らんかを知ること」が学びの第一歩や。今のお前は「型がないこと」が何を意味するかまだ分かってへん。だからまずそれを体感してもらう。
+ワシの教え子のソクラテスくんが「無知の知」言うてたやろ？「自分が何を知らんかを知ること」が学びの第一歩や。今のお前は「型がないこと」が何を意味するかまだ実感してへん。だからまずそれを体感してもらう。
+
+### シナリオ
+
+> 先輩:「`name` っていうカラム名、なんの名前か分かりにくいから `product_name` に変えといて」
+
+こういう指示、現場では日常茶飯事やろ？ほな、バックエンド側だけ変更してみよか。
 
 ### 手順
 
-1. `database/migrations/<タイムスタンプ>_create_items_table.php` を開いて、**`name` カラムの行をコメントアウト** してみい:
+1. `database/migrations/<タイムスタンプ>_create_items_table.php` を開いて、**`name` を `product_name` に変更**:
 
    ```php
    public function up(): void
    {
        Schema::create('items', function (Blueprint $table) {
            $table->id();
-           // $table->string('name');                       // ← この行をコメントアウト！
+           $table->string('product_name');                    // ← name → product_name に変更！
            $table->unsignedInteger('quantity')->default(1);
            $table->text('memo')->nullable();
            $table->boolean('purchased')->default(false);
@@ -113,17 +127,16 @@ resources/
    }
    ```
 
-   > 💡 実務でも「このカラム、もう要らんね」っちゅう判断は普通にある話や。**開発フェーズ** やと、**既存 migration を直接書き換えて `migrate:fresh`** するのが一般的やな。今日はその開発スタイルでいくで。
+   > 💡 実務でも「カラム名をもっと分かりやすくしよう」っちゅう判断は普通にある話や。**開発フェーズ** やと、**既存 migration を直接書き換えて `migrate:fresh`** するのが一般的やな。今日はその開発スタイルでいくで。
    > （※ プロダクションで動いとる migration を書き換えるのはタブーや。あくまで **まだデプロイしてない開発フェーズ** の話やからな）
 
-2. でもな、このまま `migrate:fresh --seed` すると **Factory が爆発する** で。`'name'` を insert しようとして「そんなカラムないで」と DB に怒られるからや。
-   先回りで `database/factories/ItemFactory.php` の `'name' => ...` の行も **コメントアウト** しとこ:
+2. バックエンドのカラム名を変えたら、**Factory も合わせる** のが基本や。`database/factories/ItemFactory.php` の `'name'` を `'product_name'` に変更:
 
    ```php
    public function definition(): array
    {
        return [
-           // 'name' => fake()->randomElement([...]),       // ← この行もコメントアウト
+           'product_name' => fake()->randomElement([...]),    // ← name → product_name に変更
            'quantity' => fake()->numberBetween(1, 5),
            'memo' => fake()->optional(0.3)->sentence(),
            'purchased' => fake()->boolean(20),
@@ -155,7 +168,7 @@ VS Code 等で `resources/js/views/ItemListView.vue` を開いて、`{{ item.nam
 </router-link>
 ```
 
-**赤線、出てへんやろ？** バックエンドの `name` カラムが消えとるのに、エディタは「`item.name` っちゅうのは何や？」と疑いもせえへん。
+**赤線、出てへんやろ？** バックエンドのカラム名が `product_name` に変わっとるのに、エディタは「`item.name` って…もう存在せんで？」とは一切教えてくれへん。
 
 #### ② ブラウザの DevTools を確認
 
@@ -169,18 +182,20 @@ VS Code 等で `resources/js/views/ItemListView.vue` を開いて、`{{ item.nam
 
 #### ③ 画面を見る
 
-商品名がどこにも表示されてへん。`{{ item.name }}` を読んでたテンプレートは、`item.name` が `undefined` になっただけや。
+商品名がどこにも表示されてへん。`{{ item.name }}` を読んでたテンプレートは、API のレスポンスに `name` がなくなった（`product_name` に変わった）から、`item.name` が `undefined` になっただけや。
 
 ---
 
-**これが JS の世界やで。** エディタも DevTools も誰も警告くれへん。バックエンドの API レスポンスが変わったことに **画面を目で見て初めて気づく**。本番環境なら、ユーザーから「商品名出てへんねんけど…」っちゅう問い合わせが来るまで誰も気付かへん、っちゅうことや。怖いやろ？
+**これが JS の世界やで。** エディタも DevTools も誰も警告くれへん。バックエンドのカラム名が変わったことに **画面を目で見て初めて気づく**。本番環境なら、ユーザーから「商品名出てへんねんけど…」っちゅう問い合わせが来るまで誰も気付かへん、っちゅうことや。
+
+冒頭のお前の失敗、まさにこれやったやろ？怖いやろ？
 
 ### 元に戻す
 
 次の手順で元通りに戻すで:
 
-1. `database/migrations/<タイムスタンプ>_create_items_table.php` の `$table->string('name');` のコメントアウトを外す
-2. `database/factories/ItemFactory.php` の `'name' => fake()->...` のコメントアウトを外す
+1. `database/migrations/<タイムスタンプ>_create_items_table.php` の `product_name` を `name` に戻す
+2. `database/factories/ItemFactory.php` の `'product_name'` を `'name'` に戻す
 3. DB を作り直す:
 
    ```bash
@@ -470,22 +485,28 @@ TypeScript化お疲れさん！`vue-tsc --noEmit` がエラーなしで通った
 
 ## 🔥 もう一度: 手書きの限界を体験
 
-「TS は interface しか見てへん」っちゅうことを、2つの実験で確認するで。
+「TS は interface しか見てへん」っちゅうことを、また「カラム名変更」で確認するで。今度は冒頭のトラブルの **逆パターン** や。
 
 ### 実験1: TSが嘘を見抜けないことを確認する
 
+#### シナリオ
+
+> 先輩:「やっぱ `name` って分かりにくいわ。`product_name` に戻して」
+
+またカラム名変更や。現場ではよくある「やっぱ戻して」案件やな。
+
 #### 手順
 
-1. **ウォーミングアップと同じ変更** や。`name` カラムを DB から消すで:
+1. **ウォーミングアップと同じ変更** や。バックエンド側のカラム名を `product_name` に変えるで:
 
-   - `database/migrations/<タイムスタンプ>_create_items_table.php` の `$table->string('name');` をコメントアウト
-   - `database/factories/ItemFactory.php` の `'name' => fake()->randomElement([...])` をコメントアウト
+   - `database/migrations/<タイムスタンプ>_create_items_table.php` の `$table->string('name')` を `$table->string('product_name')` に変更
+   - `database/factories/ItemFactory.php` の `'name' => fake()->randomElement([...])` を `'product_name' => fake()->randomElement([...])` に変更
    - DB 作り直し:
      ```bash
      ./vendor/bin/sail artisan migrate:fresh --seed
      ```
 
-2. **`interface Item`(resources/js/types/item.ts) は何もいじらん**（`name: string` のまま）
+2. **`interface Item`（resources/js/types/item.ts）は何もいじらん**（`name: string` のまま）
 
 3. ターミナルで型チェックを実行:
 
@@ -505,20 +526,20 @@ TypeScript化お疲れさん！`vue-tsc --noEmit` がエラーなしで通った
 #### ここで気づくこと
 
 - `interface` は「`name` というフィールドがあるで」と言ってる → コードも `item.name` を読んでる → **TS 的には全部合格**
-- でも実際のバックエンドは **`name` カラムごと消えとる** → 実行時に `item.name` は `undefined`
+- でも実際のバックエンドは **`product_name`** に変わっとる → 実行時に `item.name` は `undefined`
 - **TS は嘘を見抜けへん**。interface を信じてチェックするからや
 
-ふふん、騙されたやろ？型ついててもバグるんやで。これが「手書きの限界」の第一歩や。
+冒頭のお前の失敗と全く同じ構造やろ？型をつけても、**interface 自体がバックエンドとズレてたら意味ない** んや。
 
 ---
 
 ### 実験2: 直そうとすると手間が見える
 
-今度は interface を実際のバックエンドに合わせて修正してみよか。`name` フィールドがバックエンドから返って来なくなったんやから、interface からも消すで:
+今度は interface を実際のバックエンドに合わせて修正してみよか。カラム名が `product_name` に変わったんやから、interface も合わせるで:
 
 #### 手順
 
-1. `resources/js/types/item.ts`（Step 4 で作ったやつや。場所はここ ↓）を編集して `name: string` の行を削除:
+1. `resources/js/types/item.ts`（Step 4 で作ったやつや。場所はここ ↓）を編集して `name` を `product_name` に変更:
 
    ```
    resources/js/
@@ -529,7 +550,7 @@ TypeScript化お疲れさん！`vue-tsc --noEmit` がエラーなしで通った
    ```ts
    export interface Item {
      id: number
-     // name: string         ← この行を削除（バックエンドが返さなくなった）
+     product_name: string          // ← name → product_name に変更
      quantity: number
      memo: string | null
      purchased: boolean
@@ -588,13 +609,13 @@ ItemDetailView.vue:XX:XX - error TS2339: Property 'name' does not exist on type 
 
 実験が終わったら、以下を元に戻してや:
 
-1. `database/migrations/<タイムスタンプ>_create_items_table.php` の `$table->string('name');` のコメントアウトを外す
-2. `database/factories/ItemFactory.php` の `'name' => fake()->...` のコメントアウトを外す
+1. `database/migrations/<タイムスタンプ>_create_items_table.php` の `product_name` を `name` に戻す
+2. `database/factories/ItemFactory.php` の `'product_name'` を `'name'` に戻す
 3. DB 作り直し:
    ```bash
    ./vendor/bin/sail artisan migrate:fresh --seed
    ```
-4. `resources/js/types/item.ts` の `interface Item` に `name: string` を復活
+4. `resources/js/types/item.ts` の `interface Item` の `product_name` を `name` に戻す
 5. `vue-tsc --noEmit` がエラーなく通り、ブラウザで商品名が再び表示されることを確認
 
 ---

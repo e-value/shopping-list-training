@@ -6,6 +6,7 @@ import type { Item } from '../types/item'
 const items = ref<Item[]>([])
 const newName = ref<string>('')
 const newQuantity = ref<number>(1)
+const newPriority = ref<number>(3)
 
 async function loadItems() {
   const response = await listItems()
@@ -14,9 +15,14 @@ async function loadItems() {
 
 async function addItem() {
   if (!newName.value) return
-  await createItem({ product_name: newName.value, quantity: newQuantity.value })
+  await createItem({
+    product_name: newName.value,
+    quantity: newQuantity.value,
+    priority: newPriority.value,
+  })
   newName.value = ''
   newQuantity.value = 1
+  newPriority.value = 3
   await loadItems()
 }
 
@@ -48,6 +54,16 @@ onMounted(loadItems)
           min="1"
           class="w-20 px-3 py-2 border border-pink-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300"
         />
+        <select
+          v-model.number="newPriority"
+          class="px-3 py-2 border border-pink-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300"
+        >
+          <option :value="1">1（最優先）</option>
+          <option :value="2">2</option>
+          <option :value="3">3</option>
+          <option :value="4">4</option>
+          <option :value="5">5（後でええ）</option>
+        </select>
         <button
           type="submit"
           class="px-5 py-2 bg-rose-300 text-white font-semibold rounded-xl hover:bg-rose-400 transition-colors shadow-sm"
@@ -75,6 +91,7 @@ onMounted(loadItems)
               {{ item.product_name }}
             </router-link>
             <span class="ml-2 text-sm text-pink-500">× {{ item.quantity }}</span>
+            <span class="ml-2 text-sm text-orange-500">優先度 {{ item.priority }}</span>
           </div>
           <button
             @click="removeItem(item)"

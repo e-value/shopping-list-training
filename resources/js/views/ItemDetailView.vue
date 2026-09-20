@@ -41,6 +41,10 @@ onMounted(loadItem)
           <dd>{{ item.quantity }}</dd>
         </div>
         <div class="flex">
+          <dt class="w-24 text-pink-500">優先度</dt>
+          <dd>{{ item.priority }}</dd>
+        </div>
+        <div class="flex">
           <dt class="w-24 text-pink-500">メモ</dt>
           <dd>{{ item.memo || '—' }}</dd>
         </div>

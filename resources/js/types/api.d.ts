@@ -51,6 +51,7 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
+            priority: number;
         };
     };
     responses: {

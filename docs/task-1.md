@@ -34,6 +34,69 @@
 
 ---
 
+## 🛠️ 環境構築（初回のみ）
+
+タスクに入る前にな、まず開発環境を立ち上げなアカン。このプロジェクトは **Docker Compose**（Laravel Sail）で動くから、ホストマシンに PHP や MySQL を入れる必要はないで。
+
+### 前提条件
+
+- **Docker Desktop** がインストール済みで、起動してること
+- **Git** がインストール済みであること
+
+### 手順
+
+#### 1. `.env` ファイルを作る
+
+リポジトリには `.env.example` っちゅうテンプレートが用意してある。これをコピーして `.env` を作るんや:
+
+```bash
+cp .env.example .env
+```
+
+> 💡 `.env` には DB のパスワードやアプリの秘密鍵が入るから、**Git には絶対コミットしたらアカン**で。`.gitignore` に最初から入っとるから普通は大丈夫やけどな。
+
+#### 2. Composer の依存パッケージをインストール
+
+`vendor/` ディレクトリがまだ無いはずやから、Docker 経由で Composer を走らせるで:
+
+```bash
+docker run --rm -v "$(pwd):/app" -w /app composer:latest install --ignore-platform-reqs
+```
+
+> 💡 ホストに PHP がなくても、この方法なら Composer を実行できるんや。便利やろ？
+
+#### 3. コンテナを起動
+
+```bash
+./vendor/bin/sail up -d
+```
+
+初回はイメージのビルドがあるから数分かかるで。完了したら以下で確認:
+
+```bash
+docker compose ps
+```
+
+`laravel.test` と `mysql` の 2つが `Up` になっとればOKや。
+
+> ⚠️ **ポートが被ってエラーになったら？**
+> `.env` の `APP_PORT`、`VITE_PORT`、`FORWARD_DB_PORT` を別の番号に変えてから `sail up -d` し直してな。例えば `VITE_PORT=5175` みたいにや。
+
+#### 4. アプリの初期セットアップ
+
+```bash
+./vendor/bin/sail artisan key:generate      # APP_KEY を生成
+./vendor/bin/sail artisan migrate --seed     # DB テーブル作成 + テストデータ投入
+./vendor/bin/sail npm install                # フロントエンドの依存パッケージ
+./vendor/bin/sail npm run build              # フロントエンドをビルド
+```
+
+#### 5. 動作確認
+
+ブラウザで `http://localhost:8081` を開いてみい（ポートは `.env` の `APP_PORT` に合わせてな）。買い物リストが表示されたら環境構築は完了や！ 🎉
+
+---
+
 ## 🌿 まず作業ブランチを切る
 
 何ごとも下準備が大事や。料理する前にまな板を綺麗にするやろ？それと同じことや。

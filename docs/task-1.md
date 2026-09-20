@@ -65,10 +65,20 @@ docker run --rm -v "$(pwd):/app" -w /app composer:latest install --ignore-platfo
 
 > 💡 ホストに PHP がなくても、この方法なら Composer を実行できるんや。便利やろ？
 
-#### 3. コンテナを起動
+#### 3. `sail` コマンドのエイリアスを設定
+
+毎回 `sail` と打つのは面倒やから、エイリアスを設定しとこ:
 
 ```bash
-./vendor/bin/sail up -d
+alias sail='./vendor/bin/sail'
+```
+
+> 💡 毎回設定するのが面倒なら、`~/.zshrc`（または `~/.bashrc`）に追記しておくと永続化できるで。
+
+#### 4. コンテナを起動
+
+```bash
+sail up -d
 ```
 
 初回はイメージのビルドがあるから数分かかるで。完了したら以下で確認:
@@ -82,16 +92,16 @@ docker compose ps
 > ⚠️ **ポートが被ってエラーになったら？**
 > `.env` の `APP_PORT`、`VITE_PORT`、`FORWARD_DB_PORT` を別の番号に変えてから `sail up -d` し直してな。例えば `VITE_PORT=5175` みたいにや。
 
-#### 4. アプリの初期セットアップ
+#### 5. アプリの初期セットアップ
 
 ```bash
-./vendor/bin/sail artisan key:generate      # APP_KEY を生成
-./vendor/bin/sail artisan migrate --seed     # DB テーブル作成 + テストデータ投入
-./vendor/bin/sail npm install                # フロントエンドの依存パッケージ
-./vendor/bin/sail npm run build              # フロントエンドをビルド
+sail artisan key:generate      # APP_KEY を生成
+sail artisan migrate --seed     # DB テーブル作成 + テストデータ投入
+sail npm install                # フロントエンドの依存パッケージ
+sail npm run build              # フロントエンドをビルド
 ```
 
-#### 5. 動作確認
+#### 6. 動作確認
 
 ブラウザで `http://localhost:8081` を開いてみい（ポートは `.env` の `APP_PORT` に合わせてな）。買い物リストが表示されたら環境構築は完了や！ 🎉
 
@@ -212,7 +222,7 @@ resources/
 3. DB を作り直す:
 
    ```bash
-   ./vendor/bin/sail artisan migrate:fresh --seed
+   sail artisan migrate:fresh --seed
    ```
 
 4. ブラウザをリロードして画面を確認や。
@@ -262,7 +272,7 @@ VS Code 等で `resources/js/views/ItemListView.vue` を開いて、`{{ item.nam
 3. DB を作り直す:
 
    ```bash
-   ./vendor/bin/sail artisan migrate:fresh --seed
+   sail artisan migrate:fresh --seed
    ```
 
 「あれ、戻すんかい」って思ったやろ？そうや、今のは予告編や。本編はこれからやで。
@@ -276,7 +286,7 @@ VS Code 等で `resources/js/views/ItemListView.vue` を開いて、`{{ item.nam
 ### Step 1: 必要なパッケージを入れる
 
 ```bash
-./vendor/bin/sail npm install -D typescript vue-tsc @types/node
+sail npm install -D typescript vue-tsc @types/node
 ```
 
 それぞれ何のパッケージかワシが教えたろ。
@@ -508,7 +518,7 @@ async function loadItem() {
 ### Step 7: 型チェックを通す
 
 ```bash
-./vendor/bin/sail npx vue-tsc --noEmit
+sail npx vue-tsc --noEmit
 ```
 
 エラーが出んくなったら OK や。出る場合は型注釈を直していくんやで。
@@ -566,7 +576,7 @@ TypeScript化お疲れさん！`vue-tsc --noEmit` がエラーなしで通った
    - `database/factories/ItemFactory.php` の `'name' => fake()->randomElement([...])` を `'product_name' => fake()->randomElement([...])` に変更
    - DB 作り直し:
      ```bash
-     ./vendor/bin/sail artisan migrate:fresh --seed
+     sail artisan migrate:fresh --seed
      ```
 
 2. **`interface Item`（resources/js/types/item.ts）は何もいじらん**（`name: string` のまま）
@@ -574,7 +584,7 @@ TypeScript化お疲れさん！`vue-tsc --noEmit` がエラーなしで通った
 3. ターミナルで型チェックを実行:
 
    ```bash
-   ./vendor/bin/sail npx vue-tsc --noEmit
+   sail npx vue-tsc --noEmit
    ```
 
 4. ブラウザでリロード
@@ -625,7 +635,7 @@ TypeScript化お疲れさん！`vue-tsc --noEmit` がエラーなしで通った
 2. もう一度型チェック:
 
    ```bash
-   ./vendor/bin/sail npx vue-tsc --noEmit
+   sail npx vue-tsc --noEmit
    ```
 
 #### 観察ポイント
@@ -676,7 +686,7 @@ ItemDetailView.vue:XX:XX - error TS2339: Property 'name' does not exist on type 
 2. `database/factories/ItemFactory.php` の `'product_name'` を `'name'` に戻す
 3. DB 作り直し:
    ```bash
-   ./vendor/bin/sail artisan migrate:fresh --seed
+   sail artisan migrate:fresh --seed
    ```
 4. `resources/js/types/item.ts` の `interface Item` の `product_name` を `name` に戻す
 5. `vue-tsc --noEmit` がエラーなく通り、ブラウザで商品名が再び表示されることを確認
@@ -685,7 +695,7 @@ ItemDetailView.vue:XX:XX - error TS2339: Property 'name' does not exist on type 
 
 ## ✅ 完了基準
 
-- [ ] `tsconfig.json` が存在し、`./vendor/bin/sail npx vue-tsc --noEmit` がエラーなく通る
+- [ ] `tsconfig.json` が存在し、`sail npx vue-tsc --noEmit` がエラーなく通る
 - [ ] `app.ts` / `client.ts` / `items.ts` / `router/index.ts` にリネーム済み
 - [ ] `.vue` ファイルすべてに `lang="ts"` が付いている
 - [ ] `interface Item` を `resources/js/types/item.ts` に定義した

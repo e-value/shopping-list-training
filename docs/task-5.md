@@ -90,7 +90,7 @@ async function addItem() {
 }
 
 async function removeItem(item: Item) {
-  if (!confirm(`「${item.name}」を削除しますか？`)) return
+  if (!confirm(`「${item.product_name}」を削除しますか？`)) return
   try {
     await deleteItem(item.id)
     await loadItems()
@@ -143,7 +143,7 @@ export function deleteItem(id: number) { return apiClient.delete(`/items/${id}`)
 `createItem` の URL を書き換え:
 
 ```ts
-export function createItem(data: { name: string; quantity: number; priority: number }) {
+export function createItem(data: { product_name: string; quantity: number; priority: number }) {
   return apiClient.post<Item>('/items-broken', data)   // ← 一時的に
 }
 ```
@@ -375,7 +375,7 @@ async function addItem() {
   error.value = null                                   // ← addError からerrorに名前変更
   try {
     await createItem({
-      name: newName.value,
+      product_name: newName.value,
       quantity: newQuantity.value,
       priority: newPriority.value,
     })
@@ -389,7 +389,7 @@ async function addItem() {
 }
 
 async function removeItem(item: Item) {
-  if (!confirm(`「${item.name}」を削除しますか？`)) return
+  if (!confirm(`「${item.product_name}」を削除しますか？`)) return
   error.value = null
   try {
     await deleteItem(item.id)
@@ -468,7 +468,7 @@ async function loadItem() {
 
 async function remove() {
   if (!item.value) return
-  if (!confirm(`「${item.value.name}」を削除しますか？`)) return
+  if (!confirm(`「${item.value.product_name}」を削除しますか？`)) return
   await deleteItem(item.value.id)
   router.push('/')
 }
@@ -568,7 +568,7 @@ deleteItem → apiClient.delete(`/items/${id}`)
 #### 5-5. 型チェック
 
 ```bash
-./vendor/bin/sail npx vue-tsc --noEmit
+sail npx vue-tsc --noEmit
 ```
 
 型エラーが出ないことも確認。
@@ -610,7 +610,7 @@ deleteItem → apiClient.delete(`/items/${id}`)
 - [ ] `items.ts` の URL を一つずつ `/items-broken` に書き換えて、4操作とも **同じ赤バナー UI で操作ごとに違うメッセージ** が出る
 - [ ] DevTools Console に interceptor からの `[API error]` ログが出ている
 - [ ] `items.ts` を `/items` に戻したら今まで通り動く
-- [ ] `./vendor/bin/sail npx vue-tsc --noEmit` がエラーなく通る
+- [ ] `sail npx vue-tsc --noEmit` がエラーなく通る
 
 全部チェックついたか？バラバラを綺麗に整えたお前、もうフロントエンドの **設計屋** や。
 

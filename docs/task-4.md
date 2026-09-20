@@ -6,11 +6,11 @@
 
 ### 前回までのおさらい（ガネーシャ × お前）
 
-🙋 「先生！task-3 で `priority` カラム追加、サクッと貫通しました！migration 書いて、Item モデル更新して、`./vendor/bin/sail npm run generate:types` を叩いたら、フロントの型に一瞬で `priority` が現れて…めっちゃ気持ちよかったです！」
+🙋 「先生！task-3 で `priority` カラム追加、サクッと貫通しました！migration 書いて、Item モデル更新して、`sail npm run generate:types` を叩いたら、フロントの型に一瞬で `priority` が現れて…めっちゃ気持ちよかったです！」
 
 🐘 「おお、ええ感じやないか。…ところでお前、いま **自分が何を叩いたか**、もう一回言うてみい」
 
-🙋 「えっと…`./vendor/bin/sail npm run generate:types` ですか？」
+🙋 「えっと…`sail npm run generate:types` ですか？」
 
 🐘 「そや。**それな、お前の指が必要やった唯一の手作業** や」
 
@@ -39,7 +39,7 @@
 ```
 1. migration を書く
 2. Item モデルを更新する
-3. → ./vendor/bin/sail npm run generate:types ← ★ ここを忘れたら型がズレる
+3. → sail npm run generate:types ← ★ ここを忘れたら型がズレる
 4. フロントで型補完が効く
 ```
 
@@ -97,7 +97,7 @@ git checkout -b okumura/task-4     # ← 自分の名前に置き換えるんや
    {
        use HasFactory;
 
-       protected $fillable = ['name', 'quantity', 'memo', 'purchased', 'priority'];
+       protected $fillable = ['product_name', 'quantity', 'memo', 'purchased', 'priority'];
 
        protected $appends = ['nickname'];   // ← 追加
 
@@ -122,7 +122,7 @@ git checkout -b okumura/task-4     # ← 自分の名前に置き換えるんや
 
   ```vue
   ...
-     {{ item.name }}
+     {{ item.product_name }}
   </router-link>
   <span class="ml-2 text-sm">{{ item.nickname }}</span> //←追加
   ```
@@ -145,7 +145,7 @@ git checkout -b okumura/task-4     # ← 自分の名前に置き換えるんや
 
 1. `Item.php` から `$appends = ['nickname'];` と `getNicknameAttribute()` メソッドを削除
 2. `ItemListView.vue` から `{{ item.nickname }}` の行を削除
-3. `./vendor/bin/sail npm run generate:types` を実行して `api.d.ts` も元に戻す
+3. `sail npm run generate:types` を実行して `api.d.ts` も元に戻す
 
 ここまでクリーンになったら、Husky 導入に進む。
 
@@ -336,7 +336,7 @@ ls -la resources/js/types/api.d.ts
 ```ts
 Item: {
   id: number;
-  name: string;
+  product_name: string;
   quantity: string;   // ← integer から string に変わっとる ✨
   ...
 }

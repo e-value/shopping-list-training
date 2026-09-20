@@ -6,7 +6,7 @@
 
 ### 前回までのおさらい（ガネーシャ × お前）
 
-🙋 「先生！task-1 で `interface Item` 手書きしました！`id` も `name` も `quantity` も `purchased` も、全部 `.vue` ファイルに型を当てました！」
+🙋 「先生！task-1 で `interface Item` 手書きしました！`id` も `product_name` も `quantity` も `purchased` も、全部 `.vue` ファイルに型を当てました！」
 
 🐘 「おお、ええやんけ。よう頑張ったな。…ところでお前、もしバックエンド側で `quantity` ってカラムが `qty` に rename されたら、どうするんや？」
 
@@ -73,7 +73,7 @@ git checkout -b okumura/task-2     # ← 自分の名前に置き換えるんや
 タスク1で何も指定せずに `npm install -D typescript` した場合、最新の TS 6 が入っとるはずや。これを 5.x に揃えるで。
 
 ```bash
-./vendor/bin/sail npm install -D typescript@^5
+sail npm install -D typescript@^5
 ```
 
 > 💡 ライブラリ同士のバージョン整合性は実務でしょっちゅう出る課題や。「最新を入れたら依存先がついてこんかった」みたいなことが起きる。
@@ -84,7 +84,7 @@ git checkout -b okumura/task-2     # ← 自分の名前に置き換えるんや
 Laravel のコードから OpenAPI 仕様（JSON）を自動生成してくれる、めっちゃ優秀なやつや。
 
 ```bash
-./vendor/bin/sail composer require dedoc/scramble
+sail composer require dedoc/scramble
 ```
 
 インストール後、`http://localhost:8081/docs/api.json` で OpenAPI 仕様の JSON が取得できるようになるで。
@@ -104,7 +104,7 @@ routes/api.php
    各メソッドが返す Item モデルを辿る
        ↓
    Item モデルの $casts と migration の column 定義から
-   id / name / quantity / memo / purchased / created_at / updated_at を推論
+   id / product_name / quantity / memo / purchased / created_at / updated_at を推論
        ↓
    components.schemas.Item として OpenAPI に出力
 ```
@@ -159,9 +159,9 @@ curl -s http://localhost:8081/docs/api.json | python3 -m json.tool | head -80
 "Item": {
   "type": "object",
   "properties": {
-    "id":         { "type": "integer" },
-    "name":       { "type": "string" },
-    "quantity":   { "type": "integer" },
+    "id":           { "type": "integer" },
+    "product_name": { "type": "string" },
+    "quantity":     { "type": "integer" },
     "memo":       { "type": ["string", "null"] },
     "purchased":  { "type": "boolean" },
     "created_at": { "type": ["string", "null"], "format": "date-time" },
@@ -178,7 +178,7 @@ curl -s http://localhost:8081/docs/api.json | python3 -m json.tool | head -80
 ### Step 5: openapi-typescript を導入
 
 ```bash
-./vendor/bin/sail npm install -D openapi-typescript
+sail npm install -D openapi-typescript
 ```
 
 これがな、OpenAPI 仕様（JSON）を読んで TypeScript の型定義に変換してくれるツールや。
@@ -198,7 +198,7 @@ curl -s http://localhost:8081/docs/api.json | python3 -m json.tool | head -80
 ### Step 7: 型を生成
 
 ```bash
-./vendor/bin/sail npm run generate:types
+sail npm run generate:types
 ```
 
 `resources/js/types/api.d.ts` が **自動生成** される。これが OpenAPI から自動生成された **TypeScript の真実** や。位置はここやで:
@@ -224,7 +224,7 @@ export interface components {
   schemas: {
     Item: {
       id: number;
-      name: string;
+      product_name: string;
       quantity: number;
       memo: string | null;
       purchased: boolean;
@@ -251,7 +251,7 @@ export interface components {
 // 手書き時代の item.ts（これから捨てるやつ）
 export interface Item {
   id: number
-  name: string
+  product_name: string
   quantity: number
   memo: string | null
   purchased: boolean
@@ -348,7 +348,7 @@ const item: components['schemas']['Item'] = ...
 ### Step 9: 型チェックを通す
 
 ```bash
-./vendor/bin/sail npx vue-tsc --noEmit
+sail npx vue-tsc --noEmit
 ```
 
 エラーが出んかったら置き換え成功や。ブラウザで一覧/詳細/追加/削除が今まで通り動くことも確認してや。
@@ -357,70 +357,70 @@ const item: components['schemas']['Item'] = ...
 
 ## 🔥 もう一度: 自動同期を体験
 
-タスク1末でやった実験、覚えとるか？migration から `name` カラムをコメントアウトして `migrate:fresh --seed` したら、画面が静かに壊れたやろ。手書き interface 時代は `vue-tsc` も平然と通ってもうて、お前は何も気付けんかった。
+タスク1のウォーミングアップで `product_name` → `name` に rename したとき、画面が静かに壊れたやろ。手書き interface 時代は `vue-tsc` も平然と通ってもうて、お前は何も気付けんかった。
 
 今日は **全く同じバックエンド変更** をもう一度やる。条件は **検出機構だけが違う**（手書き → 自動生成）。何が変わるか、その目で確かめるんや。
 
-### 実験: タスク1末と同じ「name カラム削除」を加える
+### 実験: タスク1と同じ「product_name → name に rename」を加える
 
-タスク1末と全く同じ手順で `name` カラムを消すで:
+タスク1のウォーミングアップと全く同じ手順で `product_name` を `name` に変えるで:
 
-1. `database/migrations/<タイムスタンプ>_create_items_table.php` の `$table->string('name');` を **コメントアウト**
-2. `database/factories/ItemFactory.php` の `'name' => fake()->randomElement([...])` も **コメントアウト**（タスク1末で踏んだハマりや、覚えとるな？）
+1. `database/migrations/<タイムスタンプ>_create_items_table.php` の `$table->string('product_name');` を `$table->string('name');` に変更
+2. `database/factories/ItemFactory.php` の `'product_name' => fake()->randomElement([...])` を `'name' => fake()->randomElement([...])` に変更
 3. DB を作り直す:
 
    ```bash
-   ./vendor/bin/sail artisan migrate:fresh --seed
+   sail artisan migrate:fresh --seed
    ```
 
-ブラウザでリロード…**画面はやっぱり静かに壊れる**（商品名が消える）。タスク1末と一緒や。
+ブラウザでリロード…**画面はやっぱり静かに壊れる**（商品名が消える）。タスク1と一緒や。
 
-「は？じゃあタスク1末と何が違うねん！」って思ったやろ？まあ慌てんと、次見てみい。
+「は？じゃあタスク1と何が違うねん！」って思ったやろ？まあ慌てんと、次見てみい。
 
 #### まずは何もせず型チェックしてみる
 
 ```bash
-./vendor/bin/sail npx vue-tsc --noEmit
+sail npx vue-tsc --noEmit
 ```
 
-実は **このタイミングでもまだエラー出ん**。なぜなら `api.d.ts` はバックエンド変更を **まだ取り込んでへん** から。`item.ts` 経由で見てる `Item` 型はまだ `name` を含んだ古い世界線のままや。
+実は **このタイミングでもまだエラー出ん**。なぜなら `api.d.ts` はバックエンド変更を **まだ取り込んでへん** から。`item.ts` 経由で見てる `Item` 型はまだ `product_name` を含んだ古い世界線のままや。
 
-「結局タスク1末と一緒やんけ！」って言いたなるやろ？せやけど **今は手があるんや**。
+「結局タスク1と一緒やんけ！」って言いたなるやろ？せやけど **今は手があるんや**。
 
 #### 型を再生成してみる
 
 ```bash
-./vendor/bin/sail npm run generate:types
+sail npm run generate:types
 ```
 
-これで Scramble が現在の Item モデル（`name` カラム削除済み）を読み直して `/docs/api.json` を出し直し → openapi-typescript が `api.d.ts` を更新する。`components.schemas.Item` から `name` が消えるはずや。
+これで Scramble が現在の Item モデル（`product_name` → `name` に変更済み）を読み直して `/docs/api.json` を出し直し → openapi-typescript が `api.d.ts` を更新する。`components.schemas.Item` の `product_name` が `name` に変わるはずや。
 
 #### もう一度型チェック
 
 ```bash
-./vendor/bin/sail npx vue-tsc --noEmit
+sail npx vue-tsc --noEmit
 ```
 
 **今度こそエラーが出る** ✨
 
 ```
-ItemListView.vue:XX:XX - error TS2339: Property 'name' does not exist on type 'Item'.
-ItemDetailView.vue:XX:XX - error TS2339: Property 'name' does not exist on type 'Item'.
+ItemListView.vue:XX:XX - error TS2339: Property 'product_name' does not exist on type 'Item'.
+ItemDetailView.vue:XX:XX - error TS2339: Property 'product_name' does not exist on type 'Item'.
 ...
 ```
 
-`item.ts` は `components['schemas']['Item']` の別名や。その `Item` から `name` プロパティが消えた → `item.name` を読んでる全箇所が型エラーとして洗い出される。
+`item.ts` は `components['schemas']['Item']` の別名や。その `Item` の `product_name` プロパティが `name` に変わった → `item.product_name` を読んでる全箇所が型エラーとして洗い出される。
 
 #### エディタでも確認してみい
 
-`ItemListView.vue` と `ItemDetailView.vue` をエディタで開いてみ。`item.name` を使ってる箇所が **全部赤波線** になっとるはずや（template の `{{ item.name }}`、削除確認の `${item.name}`、見出しなど）。
+`ItemListView.vue` と `ItemDetailView.vue` をエディタで開いてみ。`item.product_name` を使ってる箇所が **全部赤波線** になっとるはずや（template の `{{ item.product_name }}`、削除確認の `${item.product_name}`、見出しなど）。
 
-ここがポイントや：**この赤波線、タスク1末の実験2で手書き interface から `name` を消したときに出た赤波線と、全く同じ箇所** や。
+ここがポイントや：**この赤波線、タスク1のウォーミングアップで手書き interface から `product_name` を `name` に変えたときに出た赤波線と、全く同じ箇所** や。
 
-でも今回お前、`item.ts` にも `.vue` ファイルにも **一切触ってへん**。migration と Factory から `name` を消しただけや。それでターミナルもエディタも「ここ壊れるで」を漏れなく教えてくれた。これが「**真実がバックエンドから自動で降りてくる**」っちゅうことや。
+でも今回お前、`item.ts` にも `.vue` ファイルにも **一切触ってへん**。migration と Factory の `product_name` を `name` に変えただけや。それでターミナルもエディタも「ここ壊れるで」を漏れなく教えてくれた。これが「**真実がバックエンドから自動で降りてくる**」っちゅうことや。
 
 > 💀 **これが自動生成の威力や。**
-> タスク1末の手書き時代は、**全く同じバックエンド変更** をしても interface は古い `name: string` を信じ続けて、`vue-tsc` も平然と通ってもうた。
+> タスク1の手書き時代は、**全く同じバックエンド変更** をしても interface は古い `product_name: string` を信じ続けて、`vue-tsc` も平然と通ってもうた。
 > 今は `npm run generate:types` の **たった1コマンド** で「フロントエンドの何が壊れるか」が型エラーとして全部見える。
 > ワシの教え子のニュートンくんが「リンゴが落ちるのを見て引力に気づいた」みたいに、お前は今「型が降りてくる」のを目撃したんや。
 > はい、Oh, My God!! ←親友の釈迦と決めポーズや。
@@ -429,13 +429,13 @@ ItemDetailView.vue:XX:XX - error TS2339: Property 'name' does not exist on type 
 
 実験が終わったら以下の手順で戻してや:
 
-1. `database/migrations/<タイムスタンプ>_create_items_table.php` の `$table->string('name');` のコメントアウトを外す
-2. `database/factories/ItemFactory.php` の `'name' => fake()->...` のコメントアウトを外す
+1. `database/migrations/<タイムスタンプ>_create_items_table.php` の `$table->string('name');` を `$table->string('product_name');` に戻す
+2. `database/factories/ItemFactory.php` の `'name' => fake()->...` を `'product_name' => fake()->...` に戻す
 3. DB 作り直し:
    ```bash
-   ./vendor/bin/sail artisan migrate:fresh --seed
+   sail artisan migrate:fresh --seed
    ```
-4. 型を再生成: `./vendor/bin/sail npm run generate:types`
+4. 型を再生成: `sail npm run generate:types`
 5. `vue-tsc --noEmit` がエラーなく通り、ブラウザで商品名が再び表示されることを確認
 
 ---
@@ -447,7 +447,7 @@ ItemDetailView.vue:XX:XX - error TS2339: Property 'name' does not exist on type 
 - [ ] `package.json` に `generate:types` スクリプトがある
 - [ ] `npm run generate:types` で `resources/js/types/api.d.ts` が生成されている
 - [ ] `resources/js/types/item.ts` から手書きの interface が消え、生成型を re-export している
-- [ ] `./vendor/bin/sail npx vue-tsc --noEmit` がエラーなく通る
+- [ ] `sail npx vue-tsc --noEmit` がエラーなく通る
 - [ ] ブラウザで一覧/詳細/追加/削除が今まで通り動く
 
 全部チェックついたか？お疲れ様やで！あんみつでも食べて一息や。🍨

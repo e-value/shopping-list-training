@@ -93,7 +93,7 @@ git checkout -b okumura/task-3     # ← 自分の名前に置き換えるんや
 ### Step 1: migration ファイルを生成
 
 ```bash
-./vendor/bin/sail artisan make:migration add_priority_to_items_table --table=items
+sail artisan make:migration add_priority_to_items_table --table=items
 ```
 
 `database/migrations/<タイムスタンプ>_add_priority_to_items_table.php` っちゅうファイルが生成されるはずや。
@@ -128,12 +128,12 @@ public function down(): void
 ### Step 3: migrate を実行
 
 ```bash
-./vendor/bin/sail artisan migrate
+sail artisan migrate
 ```
 
 `✓ Migrating: <ファイル名>` → `✓ Migrated` が出たら成功や。DB の `items` テーブルに `priority` カラムが追加された。
 
-> 💡 ところでお前、今 DB がどんな状態か知りたなったら `./vendor/bin/sail artisan migrate:status` 打ってみい。マイグレーション一覧と各々の状態（Ran / Pending）が見えるで。
+> 💡 ところでお前、今 DB がどんな状態か知りたなったら `sail artisan migrate:status` 打ってみい。マイグレーション一覧と各々の状態（Ran / Pending）が見えるで。
 
 ### Step 4: Model を更新
 
@@ -144,7 +144,7 @@ class Item extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'quantity', 'memo', 'purchased', 'priority'];   // ← priority 追加
+    protected $fillable = ['product_name', 'quantity', 'memo', 'purchased', 'priority'];   // ← priority 追加
 
     protected $casts = [
         'quantity' => 'integer',
@@ -162,7 +162,7 @@ class Item extends Model
 ### Step 5: 型を再生成 — ここが見せ場や ✨
 
 ```bash
-./vendor/bin/sail npm run generate:types
+sail npm run generate:types
 ```
 
 これで `api.d.ts` が更新される。覗いてみい:
@@ -173,7 +173,7 @@ export interface components {
   schemas: {
     Item: {
       id: number;
-      name: string;
+      product_name: string;
       quantity: number;
       memo: string | null;
       purchased: boolean;
@@ -220,7 +220,7 @@ Item Model                          ↓
 
 ```vue
 <router-link :to="`/items/${item.id}`" class="font-medium text-gray-700 hover:text-pink-600 hover:underline">
-    {{ item.name }}
+    {{ item.product_name }}
 </router-link>
 <span class="ml-2 text-sm text-pink-500">× {{ item.quantity }}</span>
 <span class="ml-2 text-sm text-orange-500">優先度 {{ item.priority }}</span>   <!-- ← 追加 -->
@@ -278,7 +278,7 @@ const newPriority = ref<number>(3)   // ← 追加
 async function addItem() {
     if (!newName.value) return
     await createItem({
-        name: newName.value,
+        product_name: newName.value,
         quantity: newQuantity.value,
         priority: newPriority.value,    // ← 追加
     })
@@ -330,7 +330,7 @@ async function addItem() {
 #### 8-3. `resources/js/api/items.ts` の `createItem` 関数の型を拡張
 
 ```ts
-export function createItem(data: { name: string; quantity: number; priority: number }) {
+export function createItem(data: { product_name: string; quantity: number; priority: number }) {
     return apiClient.post<Item>('/items', data)
 }
 ```
@@ -354,7 +354,7 @@ export function createItem(data: { name: string; quantity: number; priority: num
 ### Step 9: 型チェック & 動作確認
 
 ```bash
-./vendor/bin/sail npx vue-tsc --noEmit
+sail npx vue-tsc --noEmit
 ```
 
 エラーが出んかったら OK。**1回も `interface` を手で書き換えてない** ことに注目や。
@@ -397,7 +397,7 @@ export function createItem(data: { name: string; quantity: number; priority: num
 - [ ] `npm run generate:types` で `api.d.ts` の `Item` に `priority: number` が増えている
 - [ ] `ItemListView.vue` / `ItemDetailView.vue` で `priority` が表示されている
 - [ ] 追加フォームで `priority` を選んで新規追加できる
-- [ ] `./vendor/bin/sail npx vue-tsc --noEmit` がエラーなく通る
+- [ ] `sail npx vue-tsc --noEmit` がエラーなく通る
 - [ ] ブラウザで一覧/詳細/追加/削除が今まで通り動く
 
 全部チェックついたか？タスク3まで来たお前、もう半人前ちゃう、一人前や。

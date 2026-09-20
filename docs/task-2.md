@@ -32,6 +32,81 @@
 
 ---
 
+### まず前回の成果を手元で確認しよう
+
+OpenAPI の話に入る前にな、タスク1でお前が作ったものをもう一度見てみよか。ファイルを開いて思い出すんや。
+
+#### お前が手書きした型定義
+
+`resources/js/types/item.ts` を開いてみい:
+
+```ts
+export interface Item {
+  id: number
+  product_name: string
+  quantity: number
+  memo: string | null
+  purchased: boolean
+  created_at: string
+  updated_at: string
+}
+```
+
+これがタスク1の **Step 4** で書いた `interface Item` や。バックエンドの `items` テーブルのカラムを、**お前が1つずつ手で写経した** やつやな。
+
+#### 型を使って守りを固めたコード
+
+`resources/js/api/items.ts` も見てみい:
+
+```ts
+import type { Item } from '../types/item'
+
+export function listItems() {
+  return apiClient.get<Item[]>('/items')       // ← API の戻り値を Item[] と宣言
+}
+
+export function createItem(data: { product_name: string; quantity: number }) {
+  return apiClient.post<Item>('/items', data)   // ← 引数も戻り値も型付き
+}
+```
+
+`resources/js/views/ItemListView.vue` も:
+
+```ts
+import type { Item } from '../types/item'
+
+const items = ref<Item[]>([])                   // ← 「Item の配列やで」と TS に教えた
+const newName = ref<string>('')
+
+async function removeItem(item: Item) {         // ← 引数の型を明示
+  if (!confirm(`「${item.product_name}」を削除しますか？`)) return
+  // ...
+}
+```
+
+覚えとるか？ `ref<Item[]>([])` で「これは Item の配列やで」、`removeItem(item: Item)` で「引数は Item 型やで」と TS に教えたんやった。おかげで typo したら即赤波線が出る世界になったな。
+
+#### でもな、ここに「穴」があったやろ？
+
+タスク1の最後でこの図を見たの、覚えとるか:
+
+```
+[バックエンドが返すデータ]      [interface Item]      [.vue / .ts のコード]
+      ❓ ←── ここは見てない ──→    ✅ ←── ここはチェック ──→ ✅
+```
+
+TypeScript がチェックしてくれるのは **右半分だけ** や。「interface の内容通りにコードが書けてるか」は見てくれた。typo で `item.prodcut_name` って書いたら赤波線が出たやろ？あれは右半分のチェックや。
+
+でも **左半分** — 「interface がバックエンドと合ってるか」は **誰も見てへん**。
+
+タスク1ではフロントエンドだけを TypeScript 化したやろ？バックエンドのコード（Controller や Model）には一切手を入れてへんかった。つまり **interface とバックエンドの間の橋は、お前の記憶力だけで繋がっとる** 状態なんや。
+
+実際にタスク1の最後の実験で、バックエンドの `product_name` を `name` に変えても `vue-tsc` はエラーを出せんかったやろ？interface が古い `product_name` を信じ続けて、**嘘の真実** をチェックしてただけやった。
+
+今日はこの「❓」の部分を **機械で埋める** で。
+
+---
+
 ### 今日やること
 
 タスク1で **手書きで書いた `interface Item`** を **捨てて**、Laravel の Resource から **OpenAPI 仕様を生成 → そこから TypeScript の型を自動生成** するパイプラインに置き換えていくで。
@@ -39,6 +114,15 @@
 「えー、せっかく書いたのに捨てんの！？」って思うやろ？それがな、ホンマの学びや。ワシの教え子のガリレオくんも「天動説、ワシ信じてたけど捨てるわ」言うて地動説に乗り換えたやろ？真実が見えたら古い仮説は潔く捨てる。それがプロや。
 
 > 💡 タスク1の最後で見た「手書きの型は嘘をつく」問題（interface が実際のレスポンスと食い違っても気づけへん）を、**バックエンドを唯一の真実とする型の自動同期** で解決するのが狙いや。
+
+完成すると、あの図がこう変わる:
+
+```
+[バックエンドが返すデータ]      [自動生成された型]      [.vue / .ts のコード]
+      ✅ ←── 機械が同期する ──→    ✅ ←── ここはチェック ──→ ✅
+```
+
+**左半分の「❓」が「✅」に変わる** んや。もう人間の記憶力に頼らんでええ。
 
 ---
 

@@ -9,8 +9,14 @@ const router = useRouter()
 const item = ref<Item | null>(null)
 
 async function loadItem() {
-  const response = await getItem(Number(route.params.id))
-  item.value = response.data
+  try {
+    const response = await getItem(Number(route.params.id))
+    item.value = response.data
+  } catch (e) {
+    if (confirm('読み込みに失敗しました。再試行しますか？')) {
+      loadItem()
+    }
+  }
 }
 
 async function remove() {

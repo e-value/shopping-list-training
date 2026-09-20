@@ -308,6 +308,12 @@ sail npm install -D typescript vue-tsc @types/node
 
 ルートディレクトリに `tsconfig.json` を作成や:
 
+```bash
+touch tsconfig.json
+```
+
+中身はこれをコピペ:
+
 ```json
 {
   "compilerOptions": {
@@ -368,13 +374,29 @@ input: ['resources/css/app.css', 'resources/js/app.ts'],
 
 `lang="ts"` を付けることで、Vue ファイルの中身も TypeScript として扱われるようになるんや。「ここから TS の世界やで」っちゅう宣言みたいなもんや。
 
-*この時点で `ItemListView.vue` の `async function removeItem(item){` の `item` などに赤波線が出るで（型推論できない引数があるためや）。
-
-ここで「うわ、赤線出た！壊れた！」って焦るやろ？焦るな。TS が「お前、引数の型書いてへんで」って親切に教えてくれてるだけや。次のステップで型をちゃんと付けたら消えるからな。
+> ⚠️ **この時点で赤波線が出るで！**
+>
+> `resources/js/views/ItemListView.vue` を開いてみい。こんな箇所に赤波線が出とるはずや:
+>
+> ```ts
+> async function removeItem(item) {     // ← 「item」に赤波線 🔴
+>   if (!confirm(`「${item.product_name}」を削除しますか？`)) return
+> ```
+>
+> これは TS が「`item` の型が分からんで！何が入ってくるんや？」って怒っとるんや。
+>
+> 「うわ、赤線出た！壊れた！」って焦るやろ？焦るな。TS が「お前、引数の型書いてへんで」って親切に教えてくれてるだけや。**次のステップで型をちゃんと付けたら消える** からな。
 
 ### Step 4: `interface Item` を定義
 
 新しいファイル `resources/js/types/item.ts` を作成や。**`types/` ディレクトリも新規作成** やで（既存にはない）:
+
+```bash
+mkdir resources/js/types
+touch resources/js/types/item.ts
+```
+
+位置関係はこれや:
 
 ```
 resources/

@@ -560,6 +560,40 @@ sail npx vue-tsc --noEmit
 
 ---
 
+## 🔥 TypeScript化の威力を体感する
+
+`vue-tsc --noEmit` がエラーなしで通ったやろ！まずはここまでお疲れさん。
+
+「で、TypeScript にして何が嬉しいんや？」って思ってるやろ。ほな、**わざとミスを入れて TS がどう反応するか** 試してみよか。
+
+### 実験: プロパティ名をわざと間違えてみる
+
+`resources/js/views/ItemListView.vue` を開いて、テンプレートの `{{ item.product_name }}` を **わざと `{{ item.prodcut_name }}` に書き換えてみい**（typo や）:
+
+```vue
+<router-link :to="`/items/${item.id}`">
+  {{ item.prodcut_name }}     ← わざと typo！
+</router-link>
+```
+
+#### 何が起こるか
+
+**エディタに赤波線が出る** はずや 🔴
+
+> Property 'prodcut_name' does not exist on type 'Item'.
+
+TS が「そんなプロパティないで！」って即座に教えてくれとる。
+
+ウォーミングアップを思い出してみい。JS の時代は `{{ item.product_name }}` を `{{ item.name }}` に書き間違えても、**エディタは何も言わんかった**。画面を目で見て初めて気づくしかなかった。
+
+それが今は **コードを書いた瞬間に** エディタが「それ間違うてるで」って教えてくれる。**実行もデプロイも要らん**。これが TypeScript の威力や。
+
+確認できたら **`product_name` に戻しといてや**。
+
+> 💡 ついでに `item.memo` を `item.mmo` にしたり、`item.quantity` を `item.quntity` にしたりもやってみい。全部赤波線が出るはずや。**interface に定義したフィールド名以外は一切許さん**。これが「型で守られとる」っちゅう状態や。
+
+---
+
 ## 💡 TypeScriptは何を見ているか
 
 TypeScript化お疲れさん！`vue-tsc --noEmit` がエラーなしで通ったやろ！

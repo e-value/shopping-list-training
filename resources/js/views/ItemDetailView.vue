@@ -13,7 +13,7 @@ async function loadItem() {
 }
 
 async function remove() {
-  if (!confirm(`「${item.value.name}」を削除しますか？`)) return
+  if (!confirm(`「${item.value.product_name}」を削除しますか？`)) return
   await deleteItem(item.value.id)
   router.push('/')
 }
@@ -29,9 +29,9 @@ onMounted(loadItem)
 
     <section class="bg-white rounded-2xl shadow-sm border border-pink-100 p-6">
       <h2 class="text-2xl font-bold text-pink-700 mb-1">
-        {{ item.name }}
+        {{ item.product_name }}
       </h2>
-      <p class="text-sm text-pink-400 mb-5">「{{ item.name }}」の詳細</p>
+      <p class="text-sm text-pink-400 mb-5">「{{ item.product_name }}」の詳細</p>
 
       <dl class="space-y-2 text-sm">
         <div class="flex">
@@ -52,7 +52,7 @@ onMounted(loadItem)
         @click="remove"
         class="mt-6 px-4 py-2 text-sm text-rose-400 hover:bg-rose-50 rounded-lg transition-colors"
       >
-        「{{ item.name }}」を削除する
+        「{{ item.product_name }}」を削除する
       </button>
     </section>
   </div>

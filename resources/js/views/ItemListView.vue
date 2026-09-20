@@ -13,14 +13,14 @@ async function loadItems() {
 
 async function addItem() {
   if (!newName.value) return
-  await createItem({ name: newName.value, quantity: newQuantity.value })
+  await createItem({ product_name: newName.value, quantity: newQuantity.value })
   newName.value = ''
   newQuantity.value = 1
   await loadItems()
 }
 
 async function removeItem(item) {
-  if (!confirm(`「${item.name}」を削除しますか？`)) return
+  if (!confirm(`「${item.product_name}」を削除しますか？`)) return
   await deleteItem(item.id)
   await loadItems()
 }
@@ -71,7 +71,7 @@ onMounted(loadItems)
               :to="`/items/${item.id}`"
               class="font-medium text-gray-700 hover:text-pink-600 hover:underline"
             >
-              {{ item.name }}
+              {{ item.product_name }}
             </router-link>
             <span class="ml-2 text-sm text-pink-500">× {{ item.quantity }}</span>
           </div>

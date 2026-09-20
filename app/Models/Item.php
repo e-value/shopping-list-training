@@ -10,7 +10,7 @@ class Item extends Model
     /** @use HasFactory<\Database\Factories\ItemFactory> */
     use HasFactory;
 
-    protected $fillable = ['name', 'quantity', 'memo', 'purchased'];
+    protected $fillable = ['product_name', 'quantity', 'memo', 'purchased'];
 
     protected $casts = [
         'quantity' => 'integer',

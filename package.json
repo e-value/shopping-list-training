@@ -1,27 +1,35 @@
 {
-    "$schema": "https://www.schemastore.org/package.json",
-    "private": true,
-    "type": "module",
-    "scripts": {
-        "build": "vite build",
-        "dev": "vite",
-        "generate:types": "openapi-typescript http://laravel.test/docs/api.json -o resources/js/types/api.d.ts"
-    },
-    "devDependencies": {
-        "@tailwindcss/vite": "^4.0.0",
-        "@types/node": "^26.6.2",
-        "concurrently": "^9.0.1",
-        "laravel-vite-plugin": "^3.1",
-        "openapi-typescript": "^7.13.0",
-        "tailwindcss": "^4.0.0",
-        "typescript": "^5.9.3",
-        "vite": "^8.0.0",
-        "vue-tsc": "^3.3.11"
-    },
-    "dependencies": {
-        "@vitejs/plugin-vue": "^6.0.6",
-        "axios": "^1.16.0",
-        "vue": "^3.5.34",
-        "vue-router": "^4.6.4"
-    }
+  "$schema": "https://www.schemastore.org/package.json",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "generate:types": "openapi-typescript http://laravel.test/docs/api.json -o resources/js/types/api.d.ts",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^26.6.2",
+    "concurrently": "^9.0.1",
+    "husky": "^9.1.7",
+    "laravel-vite-plugin": "^3.1",
+    "lint-staged": "^16.4.0",
+    "openapi-typescript": "^7.13.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.0",
+    "vue-tsc": "^3.3.11"
+  },
+  "lint-staged": {
+    "app/**/*.php": [
+      "./vendor/bin/sail npm run generate:types"
+    ]
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "^6.0.6",
+    "axios": "^1.16.0",
+    "vue": "^3.5.34",
+    "vue-router": "^4.6.4"
+  }
 }

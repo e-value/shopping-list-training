@@ -111,23 +111,21 @@ sail npm run build              # フロントエンドをビルド
 
 何ごとも下準備が大事や。料理する前にまな板を綺麗にするやろ？それと同じことや。
 
-実装を始める前に、**upstream（親リポジトリ）から最新の `task-1` を取得** してから、自分の作業ブランチを切るんやで。ブランチ名は **`<お前の名前>/task-1`** の形式や（例: `okumura/task-1`）。
+実装を始める前に、**リモートから最新の `task-1` を取得** して、そこから自分の作業ブランチを切るんやで。ブランチ名は **`<お前の名前>/task-1`** の形式や（例: `okumura/task-1`）。
 
 ```bash
-git fetch upstream
-git checkout task-1
-git pull upstream task-1           # 最新のスタート地点を取り込む
-git checkout -b okumura/task-1     # ← 自分の名前に置き換えるんやで
+git fetch origin                                  # リモートの最新情報を取得
+git checkout -b okumura/task-1 origin/task-1       # ← 自分の名前に置き換えるんやで
 ```
 
-> 💡 各タスクの開始時に upstream から最新を取り込む癖、これな、つけといた方がええで。
+> 💡 `origin/task-1` を起点にブランチを作ることで、**リモートのスタート地点そのまま** から始められるんや。
 > ワシの教え子の織田信長くんも「いやいやワシは天下取るだけで精一杯やし」言うて、最新情勢を見ずに本能寺に泊まったら、どうなったか覚えてるやろ？まあ、ちゃんと最新を取り込んだ方が安全っちゅうことや。
 
 ### なぜ `task-1` で直接作業しないのか
 
-- `task-1` ブランチは **スタート地点** として残しとくんや。やり直したくなったら `git checkout task-1` で戻れるからな。
+- `task-1` ブランチは **スタート地点** として残しとくんや。やり直したくなったら同じコマンドでもう一度作り直せるからな。
 - PR を出すとき「`okumura/task-1` → `task-1`」と from/to が一目で区別できるからや。
-- `task-1` ブランチに更新があったときに `git pull upstream task-1` で更新を取り込めるよう、自分のコミットで汚さんようにする意図もあるんや。😎
+- `task-1` ブランチを自分のコミットで汚さんようにする意図もあるんや。😎
 
 ---
 
@@ -775,12 +773,10 @@ git commit -m "task-1: Vue を TypeScript 化"
 git push origin okumura/task-1   # ← "okumura"の部分は自分の名前に変えるんやで
 ```
 
-GitHub で **親リポジトリ（upstream）の `task-1` に向けて** Pull Request を作成してや。
-> 別リポジトリにPull Requestすることに違和感あるかもしれへんけど
-> 親リポジトリ(upstream)にはPull Requestできるようになってるんやで！🐘🍨
+GitHub でリポジトリの `task-1` ブランチに向けて Pull Request を作成してや。
 
-- **base**: `okumura-env/shopping-list-training` の `task-1`
-- **compare（head）**: `<あなたのfork>/shopping-list-training` の `<名前>/task-1`
+- **base**: `task-1`
+- **compare（head）**: `<名前>/task-1`（例: `okumura/task-1`）
 
 
 ⚠️ **Pull Request はマージしないでな**。`task-1` ブランチは次の受講生のスタート地点として綺麗に保つためや。
@@ -796,8 +792,8 @@ GitHub で **親リポジトリ（upstream）の `task-1` に向けて** Pull Re
 3. ターミナルで以下を実行:
 
    ```bash
-   git checkout task-2
-   git checkout -b <名前>/task-2    # 例: miyata/task-2
+   git fetch origin
+   git checkout -b <名前>/task-2 origin/task-2    # 例: miyata/task-2
    ```
 
 これでタスク2の開始地点に立てる。push できんかったことは気にせんでええ、**学びはお前の手に残っとる** からな。

@@ -161,7 +161,7 @@ git checkout -b okumura/task-2 origin/task-2       # ← 自分の名前に置�
 タスク1で何も指定せずに `npm install -D typescript` した場合、最新の TS 6 が入っとるはずや。これを 5.x に揃えるで。
 
 ```bash
-sail npm install -D typescript@^5
+sail npm install -D typescript@^5     # TypeScript を 5.x 系の最新に固定してインストール
 ```
 
 > 💡 ライブラリ同士のバージョン整合性は実務でしょっちゅう出る課題や。「最新を入れたら依存先がついてこんかった」みたいなことが起きる。
@@ -172,7 +172,7 @@ sail npm install -D typescript@^5
 Laravel のコードから OpenAPI 仕様（JSON）を自動生成してくれる、めっちゃ優秀なやつや。
 
 ```bash
-sail composer require dedoc/scramble
+sail composer require dedoc/scramble     # Laravel に Scramble パッケージを追加
 ```
 
 インストール後、`http://localhost:8081/docs/api.json` で OpenAPI 仕様の JSON が取得できるようになるで。
@@ -212,7 +212,7 @@ Scramble が出す `/docs/api.json` を openapi-typescript が読みに行ける
 ```php
 Route::get('/{any?}', function () {
     return view('app');
-})->where('any', '^(?!api|docs).*$');
+})->where('any', '^(?!api|docs).*$');   // ← |docs を追加（変更）
 ```
 
 🙋 「あれ、`http://localhost:8081/docs/api.json` にアクセスしたら Vue の画面が出てくるんですけど…」
@@ -269,7 +269,7 @@ curl -s http://localhost:8081/docs/api.json | python3 -m json.tool | head -80
 ### Step 5: openapi-typescript を導入
 
 ```bash
-sail npm install -D openapi-typescript
+sail npm install -D openapi-typescript     # OpenAPI → TypeScript 型変換ツールを追加
 ```
 
 これがな、OpenAPI 仕様（JSON）を読んで TypeScript の型定義に変換してくれるツールや。
@@ -282,15 +282,19 @@ sail npm install -D openapi-typescript
 "scripts": {
   "build": "vite build",
   "dev": "vite",
-  "generate:types": "openapi-typescript http://laravel.test/docs/api.json -o resources/js/types/api.d.ts"
+  "generate:types": "openapi-typescript http://laravel.test/docs/api.json -o resources/js/types/api.d.ts"   // ← 追加
 }
 ```
+
+> 💡 `http://laravel.test` っちゅうのは、Sail のコンテナ内からアプリにアクセスするためのホスト名や。ブラウザで使う `localhost:8081` とは違うから注意してな。
 
 ### Step 7: 型を生成
 
 ```bash
 sail npm run generate:types
 ```
+
+> 💡 このコマンドは Step 6 で `package.json` に追加した `generate:types` スクリプトを実行しとる。中身は `openapi-typescript` が `http://laravel.test/docs/api.json`（Scramble が出す OpenAPI 仕様）を読んで、TypeScript の型定義ファイルに変換する、っちゅう流れや。
 
 `resources/js/types/api.d.ts` が **自動生成** される。これが OpenAPI から自動生成された **TypeScript の真実** や。位置はここやで:
 
@@ -359,12 +363,12 @@ export interface Item {
 
 #### 8-2. 書き換え後のコード
 
-`resources/js/types/item.ts` を以下に **丸ごと置き換え** や（上の8行を消して、下の2行に差し替える）:
+`resources/js/types/item.ts` を以下に **丸ごと置き換え** や（上の8行を消して、下の3行に差し替える）:
 
 ```ts
-import type { components } from './api'
+import type { components } from './api'              // ← 全て書き換え
 
-export type Item = components['schemas']['Item']
+export type Item = components['schemas']['Item']     // ← 全て書き換え
 ```
 
 🙋 「え、たった3行！？あの8行の `interface Item { ... }` が3行になったんですか！？」
@@ -446,7 +450,9 @@ const item: components['schemas']['Item'] = ...
 sail npx vue-tsc --noEmit
 ```
 
-🙋 「通った！ エラーなしです！」
+> 💡 タスク1でもやったな。`vue-tsc --noEmit` は `.vue` ファイルも含めてプロジェクト全体の TypeScript 型チェックを実行するコマンドや。`--noEmit` は「チェックだけして、ファイルは生成しない」っちゅう意味やで。
+
+🙋 「通りました！エラーなしです！」
 
 🐘 「よっしゃ。ブラウザで一覧/詳細/追加/削除が今まで通り動くことも確認してや」
 
@@ -715,6 +721,27 @@ GitHub でリポジトリの `task-2` ブランチに向けて Pull Request を�
 
 ⚠️ **PR はマージしないでな**。`task-2` ブランチは次の受講生のスタート地点として綺麗に保つためや。
 
+### もし push や PR がうまくいかなかったら？
+
+焦らんでええ。次の `task-3` ブランチには **タスク2が完了した状態のコード** が最初から入っとる。やから、今の変更を全部捨てて `task-3` ブランチに切り替えれば、そこからタスク3を始められるで。
+
+手順:
+
+1. **Cursor の左サイドバー → ソース管理（Git アイコン）** を開く
+2. 変更されたファイルの一覧が出るから、**「変更を破棄」**（↩️ アイコン）で全ての変更を元に戻す
+3. ターミナルで以下を実行:
+
+   ```bash
+   git fetch origin
+   git checkout -b <名前>/task-3 origin/task-3    # 例: miyata/task-3
+   ```
+
+これでタスク3の開始地点に立てる。push できんかったことは気にせんでええ、**学びはお前の手に残っとる** からな。
+
+---
+
 次のタスクへ進むには `docs/task-3.md` を読んでや（冒頭にスタート手順があるで）。
+
+タスク3ではな、今回組んだ型自動生成パイプラインの上に **新しいカラム（priority）を追加** する実践をやるで。「自動生成って言うけど、カラム増えたらどうなるん？」っちゅう疑問に、手を動かして答えを出すで。
 
 ほな、また会おか。お供えのあんみつは随時受付中やからな🍨。

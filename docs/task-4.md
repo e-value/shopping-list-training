@@ -54,10 +54,8 @@
 タスク1〜3と同じリズム。
 
 ```bash
-git fetch upstream
-git checkout task-4
-git pull upstream task-4           # 最新のスタート地点を取り込む
-git checkout -b okumura/task-4     # ← 自分の名前に置き換えるんやで
+git fetch origin                                  # リモートの最新情報を取得
+git checkout -b okumura/task-4 origin/task-4       # ← 自分の名前に置き換えるんやで
 ```
 
 > 💡 `task-4` ブランチは **タスク3を完了した状態**（priority カラム + OpenAPI 自動生成パイプライン完成）がスタート地点や。
@@ -408,10 +406,10 @@ git commit -m "task-4: Husky + lint-staged で型再生成を自動化"
 git push origin okumura/task-4   # ← 自分の作業ブランチ名やで
 ```
 
-GitHub で **親リポジトリ（upstream）の `task-4` に向けて** Pull Request を作成してや。
+GitHub でリポジトリの `task-4` ブランチに向けて Pull Request を作成してや。
 
-- **base**: `okumura-env/shopping-list-training` の `task-4`
-- **compare（head）**: `<あなたのfork>/shopping-list-training` の `okumura/task-4`
+- **base**: `task-4`
+- **compare（head）**: `<名前>/task-4`（例: `okumura/task-4`）
 
 ⚠️ **PR はマージしないでな**。`task-4` ブランチは次の受講生のスタート地点として綺麗に保つためや。
 

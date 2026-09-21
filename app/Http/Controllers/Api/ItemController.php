@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ItemStoreRequest;
+use App\Http\Requests\ItemUpdateRequest;
 use App\Models\Item;
-use Illuminate\Http\Request;
 
 class ItemController extends Controller
 {
@@ -13,9 +14,9 @@ class ItemController extends Controller
         return Item::orderBy('id', 'desc')->get();
     }
 
-    public function store(Request $request)
+    public function store(ItemStoreRequest $request)
     {
-        $item = Item::create($request->all());
+        $item = Item::create($request->validated());
 
         return response()->json($item, 201);
     }
@@ -25,9 +26,9 @@ class ItemController extends Controller
         return $item;
     }
 
-    public function update(Request $request, Item $item)
+    public function update(ItemUpdateRequest $request, Item $item)
     {
-        $item->update($request->all());
+        $item->update($request->validated());
 
         return $item;
     }

@@ -309,10 +309,10 @@ import axios from 'axios'
 
 const apiClient = axios.create({
   baseURL: '/api',
-  headers: { Accept: 'application/json' },  
+  headers: { Accept: 'application/json' },   // ← ここまでは既存のまま
 })
 
-// 全 API 呼び出しに横断的にエラーログを残す
+// ↓ ここから追加: 全 API 呼び出しに横断的にエラーログを残す
 apiClient.interceptors.response.use(
   (response) => response,                    // 成功時はそのまま通す
   (error) => {

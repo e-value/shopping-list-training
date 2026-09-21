@@ -130,7 +130,7 @@ sail artisan migrate:fresh --seed
   ...
      {{ item.product_name }}
   </router-link>
-  <span class="ml-2 text-sm">{{ item.nickname }}</span> //←追加
+  <span class="ml-2 text-sm">{{ item.nickname }}</span>   <!-- ← 追加 -->
   ```
 
 ### 何が起こったか
@@ -349,6 +349,10 @@ Item: {
 ```
 
 `number` から `string` に変わっとれば、**バックエンドの $casts 変更が型に正しく伝わった** っちゅうことや。
+
+🙋 「えっ、commit しただけで `api.d.ts` が勝手に更新されてる…！自分では `generate:types` 打ってないのに！」
+
+🐘 「そういうことや。もう **お前がコマンドを覚えてなくても、仕組みが勝手にやってくれる** んや。これが Husky + lint-staged の威力やで」
 
 #### 5-5. テストが済んだら戻す
 

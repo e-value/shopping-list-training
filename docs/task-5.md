@@ -50,6 +50,14 @@ git checkout -b okumura/task-5 origin/task-5       # ← 自分の名前に置�
 
 > 💡 `task-5` ブランチは **タスク4を完了した状態 + 意図的に仕込まれたバラバラなエラー処理** がスタート地点や。
 
+ブランチを切り替えたら、DB をリセットしておくで。前のタスクの実験で DB が汚れとる可能性があるからな:
+
+```bash
+sail artisan migrate:fresh --seed
+```
+
+ブラウザで `http://localhost:8081` を開いて、買い物リストが正常に表示されることを確認してから次に進んでや。
+
 ---
 
 ## 👀 何が起きとるか（バラバラの現状）
@@ -235,6 +243,13 @@ resources/
     │   └── ItemDetailView.vue     # Step 4 で catch を統一
     ├── App.vue
     └── app.ts
+```
+
+まずディレクトリとファイルを作るで:
+
+```bash
+mkdir resources/js/utils
+touch resources/js/utils/handleError.ts
 ```
 
 ファイルの中身はこれや:

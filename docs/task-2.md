@@ -223,9 +223,7 @@ Route::get('/{any?}', function () {
 })->where('any', '^(?!api|docs).*$');   // ← |docs を追加（変更）
 ```
 
-🙋 「あれ、`http://localhost:8081/docs/api.json` にアクセスしたら Vue の画面が出てくるんですけど…」
-
-🐘 「あるあるやな！それな、Laravel の SPA ルートに先取りされとるからや。`docs/*` も catch-all から除外せなアカンで。上のコードの `^(?!api|docs).*$` の **`|docs`** がそれや」
+> ⚠️ これをやらんと、`/docs/api` や `/docs/api.json` にアクセスしても Vue の画面が表示されてしまうで。`docs/*` も catch-all から除外するのがポイントや。
 
 ### Step 4: ブラウザで API ドキュメントを見てみよう
 
@@ -313,10 +311,6 @@ OpenAPI の JSON を TypeScript の型定義に変換してくれるツールを
 sail npm install -D openapi-typescript
 ```
 
-🙋 「これで Scramble と openapi-typescript、2つのツールが揃ったんですね。バックエンド → JSON → TypeScript の型、という流れですか？」
-
-🐘 「その通りや。**Scramble** が JSON を吐いて、**openapi-typescript** がそれを TS の型に変換する。**バックエンドの真実が機械の手で自動的にフロントに届く** パイプラインや」
-
 ### Step 6: 型生成スクリプトを `package.json` に追加
 
 `scripts` セクションに以下の `generate:types` 行を追加するで:
@@ -339,15 +333,7 @@ Step 6 で追加した `generate:types` スクリプトを実行するで:
 sail npm run generate:types
 ```
 
-🙋 「このコマンドを打つだけで、バックエンドの情報が勝手に TypeScript の型になるんですか？」
-
-🐘 「そうや。`generate:types` 一発で、Scramble がバックエンドの真実を JSON で吐いて、openapi-typescript がそれを TypeScript の型に変換する。**バックエンドの真実がフロントに自動で降りてくる** んや」
-
-🙋 「手で `interface` を写経してた時代が嘘みたいですね…」
-
-🐘 「せやろ？Step 2 で入れた Scramble と Step 5 で入れた openapi-typescript が、ここで初めて連携するんや。ほな、生成されたファイルを見てみよか」
-
-`resources/js/types/api.d.ts` が **自動生成** される。これが OpenAPI から自動生成された **TypeScript の真実** や。位置はここやで:
+`resources/js/types/api.d.ts` が **自動生成** される。位置はここやで:
 
 ```
 resources/
@@ -385,7 +371,9 @@ export interface components {
 }
 ```
 
-つまり **`components.schemas.Item` を辿れば、バックエンドの真実そのままの `Item` 型がいる** っちゅうことや。次の Step 8 でこれを使うで。
+🙋 「え、コマンドを1つ打っただけで、バックエンドの `product_name` も `quantity` も `memo` も、全部 TypeScript の型になってるんですか？手で写経しなくても？」
+
+🐘 「そういうことや。**`generate:types` 一発で、バックエンドの真実がフロントに自動で降りてくる**。タスク1で手書きしとった `interface Item` と見比べてみい。`created_at: string | null` も nullable まで正確に拾ってくれとるやろ。次の Step 8 でこれを使うで」
 
 > ⚠️ `api.d.ts` は **絶対に手で編集したらアカン** で。次に `npm run generate:types` した瞬間、上書きされて消えるからな。「自動生成ファイル」っちゅうのはそういうもんや。
 

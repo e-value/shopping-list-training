@@ -170,14 +170,6 @@ TypeScript を 5.x 系の最新に固定してインストールするで:
 sail npm install -D typescript@^5
 ```
 
-🙋 「あれ、ダウングレードするんですか？最新バージョンの方がいいんじゃないですか？」
-
-🐘 「気持ちはわかるけどな、ライブラリには **peer dependency** っちゅう『このバージョンじゃないと動かんで』っていう制約があるんや。今回使う `openapi-typescript` v7 は TypeScript 5.x を要求しとる。最新の TS 6 を入れたままやと、インストール時にエラーが出たり、動作が保証されへんのや」
-
-🙋 「なるほど…最新が常に正解ってわけじゃないんですね」
-
-🐘 「そうや。実務でも『最新を入れたら他のライブラリが壊れた』はしょっちゅうある。**依存関係の整合性を取る** のもエンジニアの大事な仕事やで」
-
 > 💡 ライブラリ同士のバージョン整合性は実務でしょっちゅう出る課題や。「最新を入れたら依存先がついてこんかった」みたいなことが起きる。
 > ワシの教え子のニュートンくんも「全ては相互作用」言うてたな。npm のパッケージも一緒で、依存先と支え合っとるんや。`npm install` 時に "peer dependency" の警告が出たら無視せんと読む癖をつけや。
 
@@ -367,19 +359,13 @@ OpenAPI の JSON を TypeScript の型定義に変換してくれるツールを
 sail npm install -D openapi-typescript
 ```
 
-🙋 「これで Scramble と openapi-typescript、2つのツールが揃ったんですね！」
+🙋 「これで Scramble と openapi-typescript、2つのツールが揃ったんですね。バックエンド → JSON → TypeScript の型、という流れですか？」
 
-🐘 「そうや。**Scramble** が Laravel のコードから OpenAPI の JSON を吐き出して、**openapi-typescript** がその JSON を TypeScript の型に変換する。この2つがリレーのバトンを渡すように連携するんや」
-
-🙋 「バックエンド → JSON → TypeScript の型、という流れですね」
-
-🐘 「その通り。**バックエンドの真実が、機械の手で自動的にフロントに届く** パイプラインや。人間が介在せんから、写経ミスも起きひん」
+🐘 「その通りや。**Scramble** が JSON を吐いて、**openapi-typescript** がそれを TS の型に変換する。**バックエンドの真実が機械の手で自動的にフロントに届く** パイプラインや」
 
 ### Step 7: 型生成スクリプトを `package.json` に追加
 
-`scripts` セクションに `generate:types` コマンドを追加するで:
-
-`scripts` セクションに以下の `generate:types` 行を追加してな:
+`scripts` セクションに以下の `generate:types` 行を追加するで:
 
 ```json
 "scripts": {

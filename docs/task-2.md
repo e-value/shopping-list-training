@@ -475,7 +475,49 @@ sail npx vue-tsc --noEmit
 sail npm run generate:types
 ```
 
-これで Scramble が現在の Item モデル（`product_name` → `name` に変更済み）を読み直して `/docs/api.json` を出し直し → openapi-typescript が `api.d.ts` を更新する。`components.schemas.Item` の `product_name` が `name` に変わるはずや。
+これで Scramble が現在の Item モデル（`product_name` → `name` に変更済み）を読み直して `/docs/api.json` を出し直し → openapi-typescript が `api.d.ts` を更新する。
+
+#### `api.d.ts` の中身を見てみい
+
+`resources/js/types/api.d.ts` を開いてみ。`components.schemas.Item` のところを見るんや:
+
+```ts
+// 再生成後の api.d.ts（抜粋）
+Item: {
+    id: number;
+    name: string;           // ← ここ！ product_name → name に変わっとる！
+    quantity: number;
+    memo: string | null;
+    purchased: boolean;
+    created_at: string | null;
+    updated_at: string | null;
+};
+```
+
+再生成 **前** はこうやった:
+
+```ts
+// 再生成前の api.d.ts（抜粋）
+Item: {
+    id: number;
+    product_name: string;   // ← さっきまでここやった
+    quantity: number;
+    // ...
+};
+```
+
+**`product_name` が `name` に変わっとる** やろ？お前はバックエンドの migration と Factory を変えただけやのに、`api.d.ts` の中身が **自動で追従した** んや。
+
+ほんで `item.ts` を思い出してみい:
+
+```ts
+// resources/js/types/item.ts（Step 8 で書き換えたやつ）
+import type { components } from './api'
+
+export type Item = components['schemas']['Item']   // ← api.d.ts の Item をそのまま参照
+```
+
+この `Item` は `api.d.ts` の `components['schemas']['Item']` の **別名** や。つまり `api.d.ts` の `product_name` が `name` に変わった瞬間、**`Item` 型からも `product_name` が消える** っちゅうことや。お前は `item.ts` に一切触ってへんのにな。
 
 #### もう一度型チェック
 
@@ -491,7 +533,7 @@ ItemDetailView.vue:XX:XX - error TS2339: Property 'product_name' does not exist 
 ...
 ```
 
-`item.ts` は `components['schemas']['Item']` の別名や。その `Item` の `product_name` プロパティが `name` に変わった → `item.product_name` を読んでる全箇所が型エラーとして洗い出される。
+`Item` 型から `product_name` が消えたから、`item.product_name` を読んでる **全箇所** が型エラーとして洗い出される。
 
 #### エディタでも確認してみい
 
@@ -499,7 +541,7 @@ ItemDetailView.vue:XX:XX - error TS2339: Property 'product_name' does not exist 
 
 ここがポイントや：**この赤波線、タスク1のウォーミングアップで手書き interface から `product_name` を `name` に変えたときに出た赤波線と、全く同じ箇所** や。
 
-でも今回お前、`item.ts` にも `.vue` ファイルにも **一切触ってへん**。migration と Factory の `product_name` を `name` に変えただけや。それでターミナルもエディタも「ここ壊れるで」を漏れなく教えてくれた。これが「**真実がバックエンドから自動で降りてくる**」っちゅうことや。
+でも今回お前、`item.ts` にも `.vue` ファイルにも **一切触ってへん**。migration と Factory の `product_name` を `name` に変えて、`generate:types` を叩いただけや。それでターミナルもエディタも「ここ壊れるで」を漏れなく教えてくれた。これが「**真実がバックエンドから自動で降りてくる**」っちゅうことや。
 
 > 💀 **これが自動生成の威力や。**
 > タスク1の手書き時代は、**全く同じバックエンド変更** をしても interface は古い `product_name: string` を信じ続けて、`vue-tsc` も平然と通ってもうた。

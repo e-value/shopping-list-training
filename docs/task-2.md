@@ -511,13 +511,39 @@ sail npx vue-tsc --noEmit
 
 タスク1のウォーミングアップと全く同じ手順で `product_name` を `name` に変えるで:
 
-1. `database/migrations/<タイムスタンプ>_create_items_table.php` の `$table->string('product_name');` を `$table->string('name');` に変更
-2. `database/factories/ItemFactory.php` の `'product_name' => fake()->randomElement([...])` を `'name' => fake()->randomElement([...])` に変更
-3. DB を作り直す:
+**1. マイグレーションのカラム名を変更**
 
-   ```bash
-   sail artisan migrate:fresh --seed
-   ```
+`database/migrations/<タイムスタンプ>_create_items_table.php` を開いて、`product_name` を `name` に変更:
+
+```php
+Schema::create('items', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');                            // ← product_name → name に変更
+    $table->unsignedInteger('quantity')->default(1);
+    $table->text('memo')->nullable();
+    $table->boolean('purchased')->default(false);
+    $table->timestamps();
+});
+```
+
+**2. Factory も合わせて変更**
+
+`database/factories/ItemFactory.php` の `'product_name'` を `'name'` に変更:
+
+```php
+return [
+    'name' => fake()->randomElement([...]),            // ← product_name → name に変更
+    'quantity' => fake()->numberBetween(1, 5),
+    'memo' => fake()->optional(0.3)->sentence(),
+    'purchased' => fake()->boolean(20),
+];
+```
+
+**3. DB を作り直す**
+
+```bash
+sail artisan migrate:fresh --seed
+```
 
 ブラウザでリロード…**画面はやっぱり静かに壊れる**（商品名が消える）。タスク1と一緒や。
 
@@ -720,14 +746,31 @@ export type Item = components['schemas']['Item']
 
 実験が終わったら以下の手順で戻してや:
 
-1. `database/migrations/<タイムスタンプ>_create_items_table.php` の `$table->string('name');` を `$table->string('product_name');` に戻す
-2. `database/factories/ItemFactory.php` の `'name' => fake()->...` を `'product_name' => fake()->...` に戻す
-3. DB 作り直し:
-   ```bash
-   sail artisan migrate:fresh --seed
-   ```
-4. 型を再生成: `sail npm run generate:types`
-5. `vue-tsc --noEmit` がエラーなく通り、ブラウザで商品名が再び表示されることを確認
+**1.** マイグレーションの `name` を `product_name` に戻す:
+
+```php
+$table->string('product_name');                        // ← name → product_name に戻す
+```
+
+**2.** Factory の `'name'` を `'product_name'` に戻す:
+
+```php
+'product_name' => fake()->randomElement([...]),        // ← name → product_name に戻す
+```
+
+**3.** DB 作り直し:
+
+```bash
+sail artisan migrate:fresh --seed
+```
+
+**4.** 型を再生成:
+
+```bash
+sail npm run generate:types
+```
+
+**5.** `vue-tsc --noEmit` がエラーなく通り、ブラウザで商品名が再び表示されることを確認
 
 ---
 

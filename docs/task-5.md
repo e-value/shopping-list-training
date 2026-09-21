@@ -44,10 +44,8 @@
 タスク1〜4と同じリズム。
 
 ```bash
-git fetch upstream
-git checkout task-5
-git pull upstream task-5           # 最新のスタート地点を取り込む
-git checkout -b okumura/task-5     # ← 自分の名前に置き換えるんやで
+git fetch origin                                  # リモートの最新情報を取得
+git checkout -b okumura/task-5 origin/task-5       # ← 自分の名前に置き換えるんやで
 ```
 
 > 💡 `task-5` ブランチは **タスク4を完了した状態 + 意図的に仕込まれたバラバラなエラー処理** がスタート地点や。
@@ -624,10 +622,10 @@ git commit -m "task-5: バラバラなエラー処理を handleError + intercept
 git push origin okumura/task-5   # ← 自分の作業ブランチ名やで
 ```
 
-GitHub で **親リポジトリ（upstream）の `complete` に向けて** Pull Request を作成してや。
+GitHub でリポジトリの `main` ブランチに向けて Pull Request を作成してや。
 
-- **base**: `okumura-env/shopping-list-training` の `complete`
-- **compare（head）**: `<あなたのfork>/shopping-list-training` の `okumura/task-5`
+- **base**: `main`
+- **compare（head）**: `<名前>/task-5`（例: `okumura/task-5`）
 
 ⚠️ **PR はマージしないでな**。`complete` ブランチは「全部完成形」として綺麗に保つためや。
 

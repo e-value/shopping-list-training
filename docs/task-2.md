@@ -128,13 +128,11 @@ TypeScript がチェックしてくれるのは **右半分だけ** や。「int
 
 ## 🌿 まず作業ブランチを切る
 
-タスク1と同じリズムやで。実装を始める前に、**upstream（親リポジトリ）から最新の `task-2` を取得** してから、自分の作業ブランチを切るんや。ブランチ名は **`<お前の名前>/task-2`** の形式にしてや（例: `okumura/task-2`）。
+タスク1と同じリズムやで。**リモートから最新の `task-2` を取得** して、自分の作業ブランチを切るんや。ブランチ名は **`<お前の名前>/task-2`** の形式にしてや（例: `okumura/task-2`）。
 
 ```bash
-git fetch upstream
-git checkout task-2
-git pull upstream task-2           # 最新のスタート地点を取り込む
-git checkout -b okumura/task-2     # ← 自分の名前に置き換えるんやで
+git fetch origin                                  # リモートの最新情報を取得
+git checkout -b okumura/task-2 origin/task-2       # ← 自分の名前に置き換えるんやで
 ```
 
 > 💡 `task-2` ブランチは **タスク1を完了した状態（TypeScript化済み）** がスタート地点や。お前が前回頑張った成果が、そのまま乗ってる状態から始められるで。
@@ -546,10 +544,10 @@ git commit -m "task-2: OpenAPI 型自動生成パイプラインを導入"
 git push origin okumura/task-2   # ← 自分の作業ブランチ名に変えるんやで
 ```
 
-GitHub で **親リポジトリ（upstream）の `task-2` に向けて** Pull Request を作成してや。
+GitHub でリポジトリの `task-2` ブランチに向けて Pull Request を作成してや。
 
-- **base**: `okumura-env/shopping-list-training` の `task-2`
-- **compare（head）**: `<あなたのfork>/shopping-list-training` の `okumura/task-2`
+- **base**: `task-2`
+- **compare（head）**: `<名前>/task-2`（例: `okumura/task-2`）
 
 ⚠️ **PR はマージしないでな**。`task-2` ブランチは次の受講生のスタート地点として綺麗に保つためや。
 

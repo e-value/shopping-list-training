@@ -136,10 +136,14 @@ TypeScript がチェックしてくれるのは **右半分だけ** や。「int
 
 タスク1と同じリズムやで。**リモートから最新の `task-2` を取得** して、自分の作業ブランチを切るんや。ブランチ名は **`<お前の名前>/task-2`** の形式にしてや（例: `okumura/task-2`）。
 
+リモートの最新情報を取得してから、自分の作業ブランチを作るで:
+
 ```bash
-git fetch origin                                  # リモートの最新情報を取得
-git checkout -b okumura/task-2 origin/task-2       # ← 自分の名前に置き換えるんやで
+git fetch origin
+git checkout -b okumura/task-2 origin/task-2
 ```
+
+> 💡 `okumura` の部分は自分の名前に置き換えるんやで。
 
 > 💡 `task-2` ブランチは **タスク1を完了した状態（TypeScript化済み）** がスタート地点や。お前が前回頑張った成果が、そのまま乗ってる状態から始められるで。
 
@@ -160,9 +164,19 @@ git checkout -b okumura/task-2 origin/task-2       # ← 自分の名前に置�
 `openapi-typescript` の v7 は **TypeScript 5.x が peer dependency** になっとるんや。
 タスク1で何も指定せずに `npm install -D typescript` した場合、最新の TS 6 が入っとるはずや。これを 5.x に揃えるで。
 
+TypeScript を 5.x 系の最新に固定してインストールするで:
+
 ```bash
-sail npm install -D typescript@^5     # TypeScript を 5.x 系の最新に固定してインストール
+sail npm install -D typescript@^5
 ```
+
+🙋 「あれ、ダウングレードするんですか？最新バージョンの方がいいんじゃないですか？」
+
+🐘 「気持ちはわかるけどな、ライブラリには **peer dependency** っちゅう『このバージョンじゃないと動かんで』っていう制約があるんや。今回使う `openapi-typescript` v7 は TypeScript 5.x を要求しとる。最新の TS 6 を入れたままやと、インストール時にエラーが出たり、動作が保証されへんのや」
+
+🙋 「なるほど…最新が常に正解ってわけじゃないんですね」
+
+🐘 「そうや。実務でも『最新を入れたら他のライブラリが壊れた』はしょっちゅうある。**依存関係の整合性を取る** のもエンジニアの大事な仕事やで」
 
 > 💡 ライブラリ同士のバージョン整合性は実務でしょっちゅう出る課題や。「最新を入れたら依存先がついてこんかった」みたいなことが起きる。
 > ワシの教え子のニュートンくんも「全ては相互作用」言うてたな。npm のパッケージも一緒で、依存先と支え合っとるんや。`npm install` 時に "peer dependency" の警告が出たら無視せんと読む癖をつけや。
@@ -171,8 +185,10 @@ sail npm install -D typescript@^5     # TypeScript を 5.x 系の最新に固定
 
 Laravel のコードから OpenAPI 仕様（JSON）を自動生成してくれる、めっちゃ優秀なやつや。
 
+Laravel に Scramble パッケージを追加するで:
+
 ```bash
-sail composer require dedoc/scramble     # Laravel に Scramble パッケージを追加
+sail composer require dedoc/scramble
 ```
 
 インストール後、`http://localhost:8081/docs/api.json` で OpenAPI 仕様の JSON が取得できるようになるで。
@@ -345,33 +361,57 @@ curl -s http://localhost:8081/docs/api.json | python3 -m json.tool | head -80
 
 ### Step 6: openapi-typescript を導入
 
+OpenAPI の JSON を TypeScript の型定義に変換してくれるツールをインストールするで:
+
 ```bash
-sail npm install -D openapi-typescript     # OpenAPI → TypeScript 型変換ツールを追加
+sail npm install -D openapi-typescript
 ```
 
-これがな、OpenAPI 仕様（JSON）を読んで TypeScript の型定義に変換してくれるツールや。
+🙋 「これで Scramble と openapi-typescript、2つのツールが揃ったんですね！」
+
+🐘 「そうや。**Scramble** が Laravel のコードから OpenAPI の JSON を吐き出して、**openapi-typescript** がその JSON を TypeScript の型に変換する。この2つがリレーのバトンを渡すように連携するんや」
+
+🙋 「バックエンド → JSON → TypeScript の型、という流れですね」
+
+🐘 「その通り。**バックエンドの真実が、機械の手で自動的にフロントに届く** パイプラインや。人間が介在せんから、写経ミスも起きひん」
 
 ### Step 7: 型生成スクリプトを `package.json` に追加
 
 `scripts` セクションに `generate:types` コマンドを追加するで:
 
+`scripts` セクションに以下の `generate:types` 行を追加してな:
+
 ```json
 "scripts": {
   "build": "vite build",
   "dev": "vite",
-  "generate:types": "openapi-typescript http://laravel.test/docs/api.json -o resources/js/types/api.d.ts"   // ← 追加
+  "generate:types": "openapi-typescript http://laravel.test/docs/api.json -o resources/js/types/api.d.ts"
 }
 ```
 
-> 💡 `http://laravel.test` っちゅうのは、Sail のコンテナ内からアプリにアクセスするためのホスト名や。ブラウザで使う `localhost:8081` とは違うから注意してな。
+🙋 「あれ、`laravel.test` って何ですか？ブラウザでは `localhost:8081` でアクセスしてますよね？」
+
+🐘 「ええとこ気づいたな。`sail npm run generate:types` は **Sail のコンテナの中** で実行されるんや。コンテナの中からは `localhost:8081` では自分自身にアクセスできへん。代わりに `laravel.test` っちゅう **コンテナ内部のホスト名** を使うんや」
+
+🙋 「つまりブラウザ（ホスト側）からは `localhost:8081`、コンテナの中からは `laravel.test` で同じアプリにアクセスしてるってことですか？」
+
+🐘 「そういうことや。Docker のネットワークの仕組みやな。ホスト側とコンテナ側でアクセス先の名前が違うのは、実務でもよくあるから覚えとき」
 
 ### Step 8: 型を生成
+
+Step 7 で追加した `generate:types` スクリプトを実行するで:
 
 ```bash
 sail npm run generate:types
 ```
 
-> 💡 このコマンドは Step 7 で `package.json` に追加した `generate:types` スクリプトを実行しとる。中身は `openapi-typescript` が `http://laravel.test/docs/api.json`（Scramble が出す OpenAPI 仕様）を読んで、TypeScript の型定義ファイルに変換する、っちゅう流れや。
+🙋 「このコマンドを打つだけで、バックエンドの情報が勝手に TypeScript の型になるんですか？」
+
+🐘 「そうや。`generate:types` 一発で、Scramble がバックエンドの真実を JSON で吐いて、openapi-typescript がそれを TypeScript の型に変換する。**バックエンドの真実がフロントに自動で降りてくる** んや」
+
+🙋 「手で `interface` を写経してた時代が嘘みたいですね…」
+
+🐘 「せやろ？Step 2 で入れた Scramble と Step 6 で入れた openapi-typescript が、ここで初めて連携するんや。ほな、生成されたファイルを見てみよか」
 
 `resources/js/types/api.d.ts` が **自動生成** される。これが OpenAPI から自動生成された **TypeScript の真実** や。位置はここやで:
 
@@ -729,8 +769,10 @@ export interface Item {
 
 **タスク2の今: バックエンドを変えた後、エラーを出すまでにやったこと**
 
+これだけや:
+
 ```bash
-sail npm run generate:types    # ← これだけ
+sail npm run generate:types
 ```
 
 ```ts
@@ -785,10 +827,12 @@ export type Item = components['schemas']['Item']
 
 ## 💡 完了したら
 
+`okumura/task-2` の部分は自分の作業ブランチ名に変えてな:
+
 ```bash
 git add .
 git commit -m "task-2: OpenAPI 型自動生成パイプラインを導入"
-git push origin okumura/task-2   # ← 自分の作業ブランチ名に変えるんやで
+git push origin okumura/task-2
 ```
 
 GitHub でリポジトリの `task-2` ブランチに向けて Pull Request を作成してや。

@@ -465,7 +465,26 @@ sail npx vue-tsc --noEmit
 sail npx vue-tsc --noEmit
 ```
 
-実は **このタイミングでもまだエラー出ん**。なぜなら `api.d.ts` はバックエンド変更を **まだ取り込んでへん** から。`item.ts` 経由で見てる `Item` 型はまだ `product_name` を含んだ古い世界線のままや。
+実は **このタイミングでもまだエラー出ん**。なぜなら `api.d.ts` はバックエンド変更を **まだ取り込んでへん** から。
+
+#### まず今の `api.d.ts` を確認してみい
+
+`resources/js/types/api.d.ts` を開いて、`components.schemas.Item` のところを見るんや:
+
+```ts
+// 現時点の api.d.ts（抜粋）— まだ古いまま
+Item: {
+    id: number;
+    product_name: string;   // ← バックエンドは name に変えたのに、ここはまだ product_name
+    quantity: number;
+    memo: string | null;
+    purchased: boolean;
+    created_at: string | null;
+    updated_at: string | null;
+};
+```
+
+`item.ts` 経由で見てる `Item` 型はまだ `product_name` を含んだ古い世界線のままや。そら `vue-tsc` も通るわな。
 
 「結局タスク1と一緒やんけ！」って言いたなるやろ？せやけど **今は手があるんや**。
 
@@ -477,12 +496,12 @@ sail npm run generate:types
 
 これで Scramble が現在の Item モデル（`product_name` → `name` に変更済み）を読み直して `/docs/api.json` を出し直し → openapi-typescript が `api.d.ts` を更新する。
 
-#### `api.d.ts` の中身を見てみい
+#### もう一度 `api.d.ts` を見てみい
 
-`resources/js/types/api.d.ts` を開いてみ。`components.schemas.Item` のところを見るんや:
+さっきと同じ `components.schemas.Item` のところを見るんや:
 
 ```ts
-// 再生成後の api.d.ts（抜粋）
+// 再生成後の api.d.ts（抜粋）— バックエンドの変更が反映された！
 Item: {
     id: number;
     name: string;           // ← ここ！ product_name → name に変わっとる！
@@ -491,18 +510,6 @@ Item: {
     purchased: boolean;
     created_at: string | null;
     updated_at: string | null;
-};
-```
-
-再生成 **前** はこうやった:
-
-```ts
-// 再生成前の api.d.ts（抜粋）
-Item: {
-    id: number;
-    product_name: string;   // ← さっきまでここやった
-    quantity: number;
-    // ...
 };
 ```
 

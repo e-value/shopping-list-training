@@ -243,11 +243,13 @@ http://localhost:8081/docs/api
 
 こんな画面が出てくるはずや:
 
-![Scramble API ドキュメント画面](images/scramble-api-docs.png)
+![Scramble API ドキュメント Overview](images/scramble-api-overview.png)
 
 🙋 「おおお！API のドキュメントが画面に表示されてます！」
 
-🐘 「これが Scramble が自動で作ってくれる **API ドキュメント画面** や。Swagger UI っちゅう有名なツールと同じようなもんやと思ってくれたらええ」
+🐘 「これが Scramble が自動で作ってくれる **API ドキュメント画面** や。Swagger UI っちゅう有名なツールと同じようなもんやと思ってくれたらええ。ほな、左サイドバーの **Item** をクリックして展開してみい。そして **`items.index`**（GET）をクリックしてみ」
+
+![items.index の詳細画面](images/scramble-api-docs.png)
 
 #### 何が見えるか確認してみい
 
@@ -553,7 +555,9 @@ return [
 sail artisan migrate:fresh --seed
 ```
 
-ブラウザでリロード…**画面はやっぱり静かに壊れる**（商品名が消える）。タスク1と一緒や。
+ブラウザでリロード…**画面はやっぱり静かに壊れる**（商品名が消える）。タスク1と一緒や:
+
+![商品名が消えたブラウザ画面](images/browser-broken-no-productname.png)
 
 🙋 「は？じゃあタスク1と何が違うんですか！同じように壊れてますけど！」
 

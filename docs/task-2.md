@@ -219,7 +219,48 @@ Route::get('/{any?}', function () {
 
 🐘 「あるあるやな！それな、Laravel の SPA ルートに先取りされとるからや。`docs/*` も catch-all から除外せなアカンで。上のコードの `^(?!api|docs).*$` の **`|docs`** がそれや」
 
-### Step 4: OpenAPI 仕様の中身を見る
+### Step 4: ブラウザで API ドキュメントを見てみよう
+
+JSON を読む前にな、まずは **ブラウザで視覚的に** 見てみよか。以下の URL を開いてみい:
+
+```
+http://localhost:8081/docs/api
+```
+
+🙋 「おおお！API のドキュメントが画面に表示されてます！」
+
+🐘 「これが Scramble が自動で作ってくれる **API ドキュメント画面** や。Swagger UI っちゅう有名なツールと同じようなもんやと思ってくれたらええ」
+
+#### 何が見えるか確認してみい
+
+画面には以下のような情報が表示されとるはずや:
+
+- **エンドポイント一覧** — `GET /api/items`（一覧取得）、`POST /api/items`（作成）、`GET /api/items/{item}`（詳細）、`PUT /api/items/{item}`（更新）、`DELETE /api/items/{item}`（削除）
+- **各エンドポイントのリクエスト/レスポンス** — クリックすると、パラメータやレスポンスの型が展開される
+- **Item スキーマ** — `id`、`product_name`、`quantity`、`memo`、`purchased`、`created_at`、`updated_at` の型情報
+
+🙋 「これ、`routes/api.php` に書いた `Route::apiResource('items', ...)` の1行から、5つのエンドポイントが全部自動で出てるんですか？」
+
+🐘 「そうや。Scramble が `ItemController` の各メソッド（`index`、`store`、`show`、`update`、`destroy`）を解析して、リクエストとレスポンスの型まで推論してくれとる。**お前は何も書いてへん** のにな」
+
+#### 試しにリクエストを送ってみよう
+
+ドキュメント画面では **実際に API を叩く** こともできるで:
+
+1. **`GET /api/items`** をクリックして展開
+2. **「Try it」** や **「Send」** ボタンを押す
+3. 実際のレスポンス（買い物リストのデータ）が JSON で返ってくる
+
+🙋 「すごい…ブラウザから API をテストできるんですね！Postman みたいだ」
+
+🐘 「せやろ？しかもこのドキュメント、**コードを変えたら自動で更新される** んや。新しいカラムを追加したら、リロードするだけでドキュメントにも反映される。これが OpenAPI の力や」
+
+> 💡 この画面は開発中に「今 API が何を返すか」をサッと確認するのに便利やで。フロントエンドとバックエンドの開発者が別々のチームでも、このドキュメントが **共通言語** になる。
+> ただし、ドキュメント画面はあくまで開発用や。本番環境では公開せんように注意してな。
+
+🐘 「ほな、この見た目の裏側にある **JSON データ** も覗いてみよか。次の Step で中身を読み解くで」
+
+### Step 5: OpenAPI 仕様の中身を見る（JSON）
 
 Scramble が `/docs/api.json` に出してくれる OpenAPI 3.1.0 形式の JSON、ちょっと覗いてみよか:
 
@@ -266,7 +307,7 @@ curl -s http://localhost:8081/docs/api.json | python3 -m json.tool | head -80
 > - これが「**バックエンドの真実をそのまま伝える**」っちゅうことや。
 > - 名探偵コナンくんの「真実はいつも1つや」を思い出しや。バックエンドの実装こそが真実で、それを忠実に伝えるのが Scramble の仕事や。
 
-### Step 5: openapi-typescript を導入
+### Step 6: openapi-typescript を導入
 
 ```bash
 sail npm install -D openapi-typescript     # OpenAPI → TypeScript 型変換ツールを追加
@@ -274,7 +315,7 @@ sail npm install -D openapi-typescript     # OpenAPI → TypeScript 型変換ツ
 
 これがな、OpenAPI 仕様（JSON）を読んで TypeScript の型定義に変換してくれるツールや。
 
-### Step 6: 型生成スクリプトを `package.json` に追加
+### Step 7: 型生成スクリプトを `package.json` に追加
 
 `scripts` セクションに `generate:types` コマンドを追加するで:
 
@@ -288,13 +329,13 @@ sail npm install -D openapi-typescript     # OpenAPI → TypeScript 型変換ツ
 
 > 💡 `http://laravel.test` っちゅうのは、Sail のコンテナ内からアプリにアクセスするためのホスト名や。ブラウザで使う `localhost:8081` とは違うから注意してな。
 
-### Step 7: 型を生成
+### Step 8: 型を生成
 
 ```bash
 sail npm run generate:types
 ```
 
-> 💡 このコマンドは Step 6 で `package.json` に追加した `generate:types` スクリプトを実行しとる。中身は `openapi-typescript` が `http://laravel.test/docs/api.json`（Scramble が出す OpenAPI 仕様）を読んで、TypeScript の型定義ファイルに変換する、っちゅう流れや。
+> 💡 このコマンドは Step 7 で `package.json` に追加した `generate:types` スクリプトを実行しとる。中身は `openapi-typescript` が `http://laravel.test/docs/api.json`（Scramble が出す OpenAPI 仕様）を読んで、TypeScript の型定義ファイルに変換する、っちゅう流れや。
 
 `resources/js/types/api.d.ts` が **自動生成** される。これが OpenAPI から自動生成された **TypeScript の真実** や。位置はここやで:
 
@@ -305,7 +346,7 @@ resources/
     ├── router/
     ├── types/
     │   ├── api.d.ts             ← ★ 自動生成（このコマンドで新規作成された）
-    │   └── item.ts              ← Step 8 で書き換える（手書き interface を捨てる）
+    │   └── item.ts              ← Step 9 で書き換える（手書き interface を捨てる）
     ├── views/
     ├── App.vue
     └── app.ts
@@ -334,13 +375,13 @@ export interface components {
 }
 ```
 
-つまり **`components.schemas.Item` を辿れば、バックエンドの真実そのままの `Item` 型がいる** っちゅうことや。次の Step 8 でこれを使うで。
+つまり **`components.schemas.Item` を辿れば、バックエンドの真実そのままの `Item` 型がいる** っちゅうことや。次の Step 9 でこれを使うで。
 
 > ⚠️ `api.d.ts` は **絶対に手で編集したらアカン** で。次に `npm run generate:types` した瞬間、上書きされて消えるからな。「自動生成ファイル」っちゅうのはそういうもんや。
 
-### Step 8: 手書き interface Item を捨てる
+### Step 9: 手書き interface Item を捨てる
 
-#### 8-1. そもそも「interface を捨てる」って何を捨てるんや？
+#### 9-1. そもそも「interface を捨てる」って何を捨てるんや？
 
 タスク1で書いた `resources/js/types/item.ts` の中身、覚えとるか？こうやったな:
 
@@ -359,9 +400,9 @@ export interface Item {
 
 これな、**`Item` っちゅう型の中身を、お前の手でゴリゴリ書いとった** わけや。バックエンドが変わったらお前が手で直さなアカンし、nullable も間違える。
 
-「捨てる」っちゅうのは、**この interface の中身を全部消して、Step 7 で生成された `api.d.ts` 内の `Item` を指す別名（エイリアス）に置き換える** っちゅう意味や。**型を持つ場所を「自分の手」から「自動生成ファイル」に引っ越しさせる** イメージやな。
+「捨てる」っちゅうのは、**この interface の中身を全部消して、Step 8 で生成された `api.d.ts` 内の `Item` を指す別名（エイリアス）に置き換える** っちゅう意味や。**型を持つ場所を「自分の手」から「自動生成ファイル」に引っ越しさせる** イメージやな。
 
-#### 8-2. 書き換え後のコード
+#### 9-2. 書き換え後のコード
 
 `resources/js/types/item.ts` を以下に **丸ごと置き換え** や（上の8行を消して、下の3行に差し替える）:
 
@@ -375,7 +416,7 @@ export type Item = components['schemas']['Item']     // ← 全て書き換え
 
 🐘 「そうや。**`interface` っちゅう単語が消えた** やろ。これがこのタスクの中核や」
 
-#### 8-3. この2行を1行ずつ読み解くで
+#### 9-3. この2行を1行ずつ読み解くで
 
 **1行目: `import type { components } from './api'`**
 
@@ -386,10 +427,10 @@ import type { components } from './api'
 ```
 
 - ① `import type` — 「型だけ」を import する TypeScript の構文や。実行時のコードは一切持ってこん（`api.d.ts` には型しか書いてへんから当然や）。
-- ② `components` — Step 7 で見た `api.d.ts` 内の `export interface components` を、そのまま指す。
-- ③ `'./api'` — **これが `./api.d.ts` のことや**。TS は `.d.ts` の拡張子を省略して書く決まりやから、`./api` だけで通じる。**ここが Step 7 で生成したファイルとの直接の接続点** やで。
+- ② `components` — Step 8 で見た `api.d.ts` 内の `export interface components` を、そのまま指す。
+- ③ `'./api'` — **これが `./api.d.ts` のことや**。TS は `.d.ts` の拡張子を省略して書く決まりやから、`./api` だけで通じる。**ここが Step 8 で生成したファイルとの直接の接続点** やで。
 
-つまり「**Step 7 で作った `api.d.ts` の `components` 型を持ってこい**」っちゅう意味や。
+つまり「**Step 8 で作った `api.d.ts` の `components` 型を持ってこい**」っちゅう意味や。
 
 **2行目: `export type Item = components['schemas']['Item']`**
 
@@ -405,7 +446,7 @@ export type Item = components['schemas']['Item']
 つまり全体としては「**`api.d.ts` の中の `components.schemas.Item` を、`Item` という名前で再エクスポートする**」っちゅう意味や。図にするとこんな感じや:
 
 ```
- Step 7 で生成              Step 8 で書く              各 .vue / .ts は今まで通り
+ Step 8 で生成              Step 9 で書く              各 .vue / .ts は今まで通り
  ─────────────              ─────────────              ─────────────────────────
  api.d.ts                    item.ts                    ItemListView.vue など
  ┌──────────────┐            ┌────────────────────┐    ┌────────────────────┐
@@ -421,7 +462,7 @@ export type Item = components['schemas']['Item']
                              └────────────────────┘
 ```
 
-#### 8-4. なんで別名なん？直接使ったらアカンの？
+#### 9-4. なんで別名なん？直接使ったらアカンの？
 
 「`api.d.ts` の中身をそのまま使えばええやん？」って思うやろ？確かに各ファイルで毎回これを書いてもええ:
 
@@ -435,7 +476,7 @@ const item: components['schemas']['Item'] = ...
 
 おかげで `.vue` / `.ts` ファイルは今まで通り `import type { Item } from '../types/item'` で動く。**外から見た公開 API は手書き時代と全く同じ** っちゅうことや。**「タスク1で書いた使う側のコードに一切手を入れんで済む」** のはこの薄い1枚ファイルのおかげやで。
 
-#### 8-5. まとめ
+#### 9-5. まとめ
 
 - `interface Item { ... }` を **捨てた** = 中身の型定義をお前が手で書くのをやめた
 - 代わりに自動生成された `components['schemas']['Item']` に **別名を付けただけ** の3行になった
@@ -444,7 +485,7 @@ const item: components['schemas']['Item'] = ...
 > 💀 ここがエレガントなとこや。タスク1で頑張って書いた手書き interface を、たった3行で置き換える。
 > 「えー、3行だけ！？」って驚くやろ？これがな、抽象化の力や。「**型の定義を持つ場所をひとつに集約する**」ことで、お前のコードは "Item の形" を覚える必要がなくなった。覚えてるのは `api.d.ts` だけ。お前の脳のメモリが解放されたで。
 
-### Step 9: 型チェックを通す
+### Step 10: 型チェックを通す
 
 ```bash
 sail npx vue-tsc --noEmit
@@ -549,7 +590,7 @@ Item: {
 ほんで `item.ts` を思い出してみい:
 
 ```ts
-// resources/js/types/item.ts（Step 8 で書き換えたやつ）
+// resources/js/types/item.ts（Step 9 で書き換えたやつ）
 import type { components } from './api'
 
 export type Item = components['schemas']['Item']   // ← api.d.ts の Item をそのまま参照

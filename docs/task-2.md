@@ -540,11 +540,53 @@ ItemDetailView.vue:XX:XX - error TS2339: Property 'product_name' does not exist 
 ...
 ```
 
-`Item` 型から `product_name` が消えたから、`item.product_name` を読んでる **全箇所** が型エラーとして洗い出される。
+#### なんでエラーが出たか、コードで追ってみい
+
+**型の世界**（`api.d.ts` → `item.ts`）は、`generate:types` でバックエンドの変更に追従した。`Item` 型はもう `name` しか持ってへん。
+
+でも **フロントエンドのコードは何も変えてへん** やろ？`ItemListView.vue` を見てみい:
+
+```vue
+<!-- resources/js/views/ItemListView.vue -->
+<router-link :to="`/items/${item.id}`">
+  {{ item.product_name }}              <!-- ← まだ product_name を読んどる！ -->
+</router-link>
+```
+
+```ts
+// 同じファイルの script 部分
+async function removeItem(item: Item) {
+  if (!confirm(`「${item.product_name}」を削除しますか？`)) return
+  //                    ↑ ここも product_name のまま！
+```
+
+`ItemDetailView.vue` も同じや:
+
+```vue
+<!-- resources/js/views/ItemDetailView.vue -->
+<h2>{{ item.product_name }}</h2>                   <!-- ← product_name -->
+<p>「{{ item.product_name }}」の詳細</p>           <!-- ← product_name -->
+```
+
+```ts
+// 同じファイルの script 部分
+if (!confirm(`「${item.value.product_name}」を削除しますか？`)) return
+//                          ↑ ここも product_name
+```
+
+つまりこういう状態や:
+
+```
+Item 型（api.d.ts 経由で自動更新済み）:  name ✅
+フロントのコード（まだ手つかず）:        product_name ❌
+                                         ↑ ここがズレてるからエラーが出た！
+```
+
+**`Item` 型から `product_name` が消えたのに、フロントのコードがまだ `item.product_name` を読んどる** → TypeScript が「そんなプロパティないで！」と全箇所を教えてくれたわけや。
 
 #### エディタでも確認してみい
 
-`ItemListView.vue` と `ItemDetailView.vue` をエディタで開いてみ。`item.product_name` を使ってる箇所が **全部赤波線** になっとるはずや（template の `{{ item.product_name }}`、削除確認の `${item.product_name}`、見出しなど）。
+`ItemListView.vue` と `ItemDetailView.vue` をエディタで開いてみ。上で見た `item.product_name` の箇所が **全部赤波線** になっとるはずや。
 
 ここがポイントや：**この赤波線、タスク1のウォーミングアップで手書き interface から `product_name` を `name` に変えたときに出た赤波線と、全く同じ箇所** や。
 

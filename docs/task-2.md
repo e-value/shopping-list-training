@@ -302,56 +302,10 @@ Body 欄の `"product_name": "string"` の `"string"` を実際の値に書き�
 > 💡 この画面は開発中に「今 API が何を返すか」「何を送ればええか」をサッと確認するのに便利やで。フロントエンドとバックエンドの開発者が別々のチームでも、このドキュメントが **共通言語** になる。
 > ただし、ドキュメント画面はあくまで開発用や。本番環境では公開せんように注意してな。
 
-🐘 「さて、この画面の裏側で動いてる **OpenAPI の JSON** も少し見ておくで。Item の型情報がどう書かれとるか、中身を覗いてみよか」
+> 💡 ドキュメント画面の Item スキーマを、タスク1で手書きした `interface Item` と比べてみい。
+> `created_at` や `updated_at` が `string or null` になっとるやろ？Scramble は DB の nullable まで正確に拾ってくれとる（手書きでは `string` でズレてたな）。これが「**バックエンドの真実をそのまま伝える**」っちゅうことや。
 
-### Step 5: OpenAPI 仕様の中身を見る（JSON）
-
-Scramble が `/docs/api.json` に出してくれる OpenAPI 3.1.0 形式の JSON、ちょっと覗いてみよか:
-
-```bash
-curl -s http://localhost:8081/docs/api.json | python3 -m json.tool | head -80
-```
-
-出力されるトップレベルの構造はこんな感じや:
-
-| キー | 意味 |
-|---|---|
-| `openapi` | OpenAPI 規格のバージョン宣言（`"3.1.0"`） |
-| `info` | API のメタ情報（タイトル、バージョン） |
-| `servers` | API のベース URL（例: `http://localhost:8081/api`） |
-| `paths` | **各 URL に対する操作**。例えば `/items` の `get`（一覧取得） `post`（作成）、`/items/{item}` の `get` `put` `delete` |
-| `components.schemas` | **共通の型定義**（`Item` などはここに置かれる） |
-
-例えば `paths./items` の `get` を見ると、`responses.200.content.application/json.schema` に `"$ref": "#/components/schemas/Item"` と書いてあるはずや。
-これは「**この API は `Item` 型を返す**」っちゅう意味で、Item の具体的なプロパティは `components.schemas.Item` の方に書かれてる、という **参照関係** になっとる。
-
-> 💡 同じ型を何度も書かんで済むようにする仕組みやな。ワシの教え子のレオナルド・ダ・ヴィンチくんも「一度描いたデッサンを参考に何枚も絵を描く」言うてたけど、それと同じや。重複を避けて、参照で繋ぐ。
-
-#### Item スキーマの中身
-
-**先ほど `curl` で取得した OpenAPI JSON** の中を見ると、`components.schemas.Item` のところに Item の型情報があるで:
-
-```json
-"Item": {
-  "type": "object",
-  "properties": {
-    "id":           { "type": "integer" },
-    "product_name": { "type": "string" },
-    "quantity":     { "type": "integer" },
-    "memo":       { "type": ["string", "null"] },
-    "purchased":  { "type": "boolean" },
-    "created_at": { "type": ["string", "null"], "format": "date-time" },
-    "updated_at": { "type": ["string", "null"], "format": "date-time" }
-  }
-}
-```
-
-> 💡 タスク1で **手書き** した `interface Item`(resources/js/types/item.ts) と比べてみい。
-> - `created_at: string | null` ← Scramble は DB の nullable まで拾ってくれとる（手書きでは `string` でズレてたな）
-> - これが「**バックエンドの真実をそのまま伝える**」っちゅうことや。
-> - 名探偵コナンくんの「真実はいつも1つや」を思い出しや。バックエンドの実装こそが真実で、それを忠実に伝えるのが Scramble の仕事や。
-
-### Step 6: openapi-typescript を導入
+### Step 5: openapi-typescript を導入
 
 OpenAPI の JSON を TypeScript の型定義に変換してくれるツールをインストールするで:
 
@@ -363,7 +317,7 @@ sail npm install -D openapi-typescript
 
 🐘 「その通りや。**Scramble** が JSON を吐いて、**openapi-typescript** がそれを TS の型に変換する。**バックエンドの真実が機械の手で自動的にフロントに届く** パイプラインや」
 
-### Step 7: 型生成スクリプトを `package.json` に追加
+### Step 6: 型生成スクリプトを `package.json` に追加
 
 `scripts` セクションに以下の `generate:types` 行を追加するで:
 
@@ -377,9 +331,9 @@ sail npm install -D openapi-typescript
 
 > 💡 `http://laravel.test` は Sail のコンテナ内からアプリにアクセスするためのホスト名や。ブラウザで使う `localhost:8081` とは違うから注意してな。
 
-### Step 8: 型を生成
+### Step 7: 型を生成
 
-Step 7 で追加した `generate:types` スクリプトを実行するで:
+Step 6 で追加した `generate:types` スクリプトを実行するで:
 
 ```bash
 sail npm run generate:types
@@ -391,7 +345,7 @@ sail npm run generate:types
 
 🙋 「手で `interface` を写経してた時代が嘘みたいですね…」
 
-🐘 「せやろ？Step 2 で入れた Scramble と Step 6 で入れた openapi-typescript が、ここで初めて連携するんや。ほな、生成されたファイルを見てみよか」
+🐘 「せやろ？Step 2 で入れた Scramble と Step 5 で入れた openapi-typescript が、ここで初めて連携するんや。ほな、生成されたファイルを見てみよか」
 
 `resources/js/types/api.d.ts` が **自動生成** される。これが OpenAPI から自動生成された **TypeScript の真実** や。位置はここやで:
 
@@ -402,7 +356,7 @@ resources/
     ├── router/
     ├── types/
     │   ├── api.d.ts             ← ★ 自動生成（このコマンドで新規作成された）
-    │   └── item.ts              ← Step 9 で書き換える（手書き interface を捨てる）
+    │   └── item.ts              ← Step 8 で書き換える（手書き interface を捨てる）
     ├── views/
     ├── App.vue
     └── app.ts
@@ -431,13 +385,13 @@ export interface components {
 }
 ```
 
-つまり **`components.schemas.Item` を辿れば、バックエンドの真実そのままの `Item` 型がいる** っちゅうことや。次の Step 9 でこれを使うで。
+つまり **`components.schemas.Item` を辿れば、バックエンドの真実そのままの `Item` 型がいる** っちゅうことや。次の Step 8 でこれを使うで。
 
 > ⚠️ `api.d.ts` は **絶対に手で編集したらアカン** で。次に `npm run generate:types` した瞬間、上書きされて消えるからな。「自動生成ファイル」っちゅうのはそういうもんや。
 
-### Step 9: 手書き interface Item を捨てる
+### Step 8: 手書き interface Item を捨てる
 
-#### 9-1. そもそも「interface を捨てる」って何を捨てるんや？
+#### 8-1. そもそも「interface を捨てる」って何を捨てるんや？
 
 タスク1で書いた `resources/js/types/item.ts` の中身、覚えとるか？こうやったな:
 
@@ -456,9 +410,9 @@ export interface Item {
 
 これな、**`Item` っちゅう型の中身を、お前の手でゴリゴリ書いとった** わけや。バックエンドが変わったらお前が手で直さなアカンし、nullable も間違える。
 
-「捨てる」っちゅうのは、**この interface の中身を全部消して、Step 8 で生成された `api.d.ts` 内の `Item` を指す別名（エイリアス）に置き換える** っちゅう意味や。**型を持つ場所を「自分の手」から「自動生成ファイル」に引っ越しさせる** イメージやな。
+「捨てる」っちゅうのは、**この interface の中身を全部消して、Step 7 で生成された `api.d.ts` 内の `Item` を指す別名（エイリアス）に置き換える** っちゅう意味や。**型を持つ場所を「自分の手」から「自動生成ファイル」に引っ越しさせる** イメージやな。
 
-#### 9-2. 書き換え後のコード
+#### 8-2. 書き換え後のコード
 
 `resources/js/types/item.ts` を以下に **丸ごと置き換え** や（上の8行を消して、下の3行に差し替える）:
 
@@ -472,7 +426,7 @@ export type Item = components['schemas']['Item']     // ← 全て書き換え
 
 🐘 「そうや。**`interface` っちゅう単語が消えた** やろ。これがこのタスクの中核や」
 
-#### 9-3. この2行を1行ずつ読み解くで
+#### 8-3. この2行を1行ずつ読み解くで
 
 **1行目: `import type { components } from './api'`**
 
@@ -483,10 +437,10 @@ import type { components } from './api'
 ```
 
 - ① `import type` — 「型だけ」を import する TypeScript の構文や。実行時のコードは一切持ってこん（`api.d.ts` には型しか書いてへんから当然や）。
-- ② `components` — Step 8 で見た `api.d.ts` 内の `export interface components` を、そのまま指す。
-- ③ `'./api'` — **これが `./api.d.ts` のことや**。TS は `.d.ts` の拡張子を省略して書く決まりやから、`./api` だけで通じる。**ここが Step 8 で生成したファイルとの直接の接続点** やで。
+- ② `components` — Step 7 で見た `api.d.ts` 内の `export interface components` を、そのまま指す。
+- ③ `'./api'` — **これが `./api.d.ts` のことや**。TS は `.d.ts` の拡張子を省略して書く決まりやから、`./api` だけで通じる。**ここが Step 7 で生成したファイルとの直接の接続点** やで。
 
-つまり「**Step 8 で作った `api.d.ts` の `components` 型を持ってこい**」っちゅう意味や。
+つまり「**Step 7 で作った `api.d.ts` の `components` 型を持ってこい**」っちゅう意味や。
 
 **2行目: `export type Item = components['schemas']['Item']`**
 
@@ -502,7 +456,7 @@ export type Item = components['schemas']['Item']
 つまり全体としては「**`api.d.ts` の中の `components.schemas.Item` を、`Item` という名前で再エクスポートする**」っちゅう意味や。図にするとこんな感じや:
 
 ```
- Step 8 で生成              Step 9 で書く              各 .vue / .ts は今まで通り
+ Step 7 で生成              Step 8 で書く              各 .vue / .ts は今まで通り
  ─────────────              ─────────────              ─────────────────────────
  api.d.ts                    item.ts                    ItemListView.vue など
  ┌──────────────┐            ┌────────────────────┐    ┌────────────────────┐
@@ -518,7 +472,7 @@ export type Item = components['schemas']['Item']
                              └────────────────────┘
 ```
 
-#### 9-4. なんで別名なん？直接使ったらアカンの？
+#### 8-4. なんで別名なん？直接使ったらアカンの？
 
 「`api.d.ts` の中身をそのまま使えばええやん？」って思うやろ？確かに各ファイルで毎回これを書いてもええ:
 
@@ -532,7 +486,7 @@ const item: components['schemas']['Item'] = ...
 
 おかげで `.vue` / `.ts` ファイルは今まで通り `import type { Item } from '../types/item'` で動く。**外から見た公開 API は手書き時代と全く同じ** っちゅうことや。**「タスク1で書いた使う側のコードに一切手を入れんで済む」** のはこの薄い1枚ファイルのおかげやで。
 
-#### 9-5. まとめ
+#### 8-5. まとめ
 
 - `interface Item { ... }` を **捨てた** = 中身の型定義をお前が手で書くのをやめた
 - 代わりに自動生成された `components['schemas']['Item']` に **別名を付けただけ** の3行になった
@@ -541,7 +495,7 @@ const item: components['schemas']['Item'] = ...
 > 💀 ここがエレガントなとこや。タスク1で頑張って書いた手書き interface を、たった3行で置き換える。
 > 「えー、3行だけ！？」って驚くやろ？これがな、抽象化の力や。「**型の定義を持つ場所をひとつに集約する**」ことで、お前のコードは "Item の形" を覚える必要がなくなった。覚えてるのは `api.d.ts` だけ。お前の脳のメモリが解放されたで。
 
-### Step 10: 型チェックを通す
+### Step 9: 型チェックを通す
 
 ```bash
 sail npx vue-tsc --noEmit
@@ -646,7 +600,7 @@ Item: {
 ほんで `item.ts` を思い出してみい:
 
 ```ts
-// resources/js/types/item.ts（Step 9 で書き換えたやつ）
+// resources/js/types/item.ts（Step 8 で書き換えたやつ）
 import type { components } from './api'
 
 export type Item = components['schemas']['Item']   // ← api.d.ts の Item をそのまま参照

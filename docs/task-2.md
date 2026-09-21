@@ -247,7 +247,11 @@ http://localhost:8081/docs/api
 
 🙋 「おおお！API のドキュメントが画面に表示されてます！」
 
-🐘 「これが Scramble が自動で作ってくれる **API ドキュメント画面** や。Swagger UI っちゅう有名なツールと同じようなもんやと思ってくれたらええ。ほな、左サイドバーの **Item** をクリックして展開してみい。そして **`items.index`**（GET）をクリックしてみ」
+🐘 「これが Scramble が自動で作ってくれる **API ドキュメント画面** や。Swagger UI っちゅう有名なツールと同じようなもんやと思ってくれたらええ。ほな、左サイドバーの **ENDPOINTS** のとこに **Item** っちゅうのがあるやろ？そこをクリックして展開してみい」
+
+🙋 「あ、`items.index`（GET）、`items.store`（POST）…5つのエンドポイントが出てきました！」
+
+🐘 「そうや。ほな **`items.index`**（GET）をクリックしてみ」
 
 ![items.index の詳細画面](images/scramble-api-docs.png)
 

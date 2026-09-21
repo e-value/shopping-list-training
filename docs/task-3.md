@@ -336,7 +336,7 @@ async function addItem() {
 #### 8-3. `resources/js/api/items.ts` の `createItem` 関数の型を拡張
 
 ```ts
-export function createItem(data: { product_name: string; quantity: number; priority: number }) {
+export function createItem(data: { product_name: string; quantity: number; priority: number }) {  // ← priority: number を追加（変更）
     return apiClient.post<Item>('/items', data)
 }
 ```

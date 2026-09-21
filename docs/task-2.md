@@ -227,17 +227,21 @@ JSON を読む前にな、まずは **ブラウザで視覚的に** 見てみよ
 http://localhost:8081/docs/api
 ```
 
+こんな画面が出てくるはずや:
+
+![Scramble API ドキュメント画面](images/scramble-api-docs.png)
+
 🙋 「おおお！API のドキュメントが画面に表示されてます！」
 
 🐘 「これが Scramble が自動で作ってくれる **API ドキュメント画面** や。Swagger UI っちゅう有名なツールと同じようなもんやと思ってくれたらええ」
 
 #### 何が見えるか確認してみい
 
-画面には以下のような情報が表示されとるはずや:
+画面の見方を説明するで:
 
-- **エンドポイント一覧** — `GET /api/items`（一覧取得）、`POST /api/items`（作成）、`GET /api/items/{item}`（詳細）、`PUT /api/items/{item}`（更新）、`DELETE /api/items/{item}`（削除）
-- **各エンドポイントのリクエスト/レスポンス** — クリックすると、パラメータやレスポンスの型が展開される
-- **Item スキーマ** — `id`、`product_name`、`quantity`、`memo`、`purchased`、`created_at`、`updated_at` の型情報
+- **左サイドバー** — `items.index`（GET）、`items.store`（POST）、`items.show`（GET）、`items.update`（PUT）、`items.destroy`（DELETE）の5つのエンドポイントが並んどる。`routes/api.php` の `Route::apiResource('items', ...)` 1行から自動で5つ出てきたんやで
+- **中央エリア** — エンドポイントをクリックすると、レスポンスの **Body**（`id` integer、`product_name` string、`quantity` integer …）が表示される。これがまさに Scramble が推論した Item の型情報や
+- **左下の SCHEMAS** — `Item` をクリックすると、Item モデルの全フィールドと型が一覧で見れる
 
 🙋 「これ、`routes/api.php` に書いた `Route::apiResource('items', ...)` の1行から、5つのエンドポイントが全部自動で出てるんですか？」
 

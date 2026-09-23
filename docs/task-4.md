@@ -366,13 +366,14 @@ protected $casts = [
 
 ```bash
 mkdir -p .githooks
+touch .githooks/pre-commit
 ```
 
-次に `.githooks/pre-commit` ファイルを作成する。**エディタで作ってもええし、ターミナルでもええ**:
+次に `.githooks/pre-commit` の中身を書く。**エディタで開いてもええし、ターミナルで一発書き込みでもええ**:
 
 **方法A: エディタで作成**
 
-VS Code 等で `.githooks/pre-commit`（拡張子なし）を新規作成して、以下の内容を書いて保存:
+VS Code 等で `.githooks/pre-commit` を開いて、以下の内容を書いて保存:
 
 ```bash
 #!/bin/sh

@@ -44,7 +44,7 @@ export interface components {
         Item: {
             id: number;
             product_name: string;
-            quantity: string;
+            quantity: number;
             memo: string | null;
             purchased: boolean;
             priority: number;

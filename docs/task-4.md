@@ -161,17 +161,79 @@ commit 完了（型ファイルも一緒にコミットされる）
   <span class="ml-2 text-sm">{{ item.nickname }}</span>   <!-- ← 追加 -->
   ```
 
-### 何が起こったか
+### 何が起こったか確認
 
-| 観察対象 | 状態 |
-|---|---|
-| ブラウザ画面 | `にせの属性` が表示される（実行時には存在する）|
-| エディタ | **`item.nickname` の `nickname` に赤波線** が出る：`Property 'nickname' does not exist on type 'Item'` |
-| `sail npx vue-tsc --noEmit` | **型エラー** で落ちる |
+3つの観察ポイントを見てみい:
 
-「実行時には動くけど TS が知らん」っちゅう **嘘の世界線** に突入した。これな、タスク1の「**手書きの型は嘘をつく**」と同じ症状や。バックエンドが進化したのに **フロントの型がついてきてない**。
+**① ブラウザ画面** → `にせの属性` と表示されとる。**ちゃんと動いてる**ように見えるやろ？
 
-> 💀 ワシの教え子のメフィストフェレスくんが「**人間は何かを忘れた瞬間に堕落する**」言うてたな。お前は今、`generate:types` を1回忘れただけで、タスク2 で築いた **「型は降ってくる」っちゅう真実** を裏切ってしもうた。
+**② エディタ** → `item.nickname` の `nickname` の下に **赤波線** が出る:
+
+```
+Property 'nickname' does not exist on type 'Item'
+（型 'Item' にプロパティ 'nickname' は存在しません）
+```
+
+**③ 型チェックコマンド** → ターミナルで以下を実行してみい:
+
+```bash
+sail npx vue-tsc --noEmit
+```
+
+こんなエラーが出る:
+
+```
+resources/js/views/ItemListView.vue(95,48): error TS2339:
+Property 'nickname' does not exist on type
+'{ id: number; product_name: string; quantity: number;
+  memo: string | null; purchased: boolean;
+  created_at: string | null; updated_at: string | null;
+  priority: number; }'.
+```
+
+TypeScript が「Item 型の定義に `nickname` なんてないぞ」と怒っとる。`api.d.ts` の Item 型には `id`, `product_name`, `quantity`... しかない。`nickname` は **まだ型に反映されてへん** からな。
+
+---
+
+🙋 「え、でも先生、**ブラウザではちゃんと表示されてる** んですよ？エラーなのに動くって矛盾してませんか？」
+
+🐘 「ええ質問やな。ここがな、初心者がいっちばん混乱するポイントや。整理するで」
+
+```
+TypeScript の世界（開発時）         JavaScript の世界（ブラウザ）
+──────────────────────           ──────────────────────────
+api.d.ts に nickname がない       API レスポンスに nickname がある
+ → 「そんなプロパティ知らん」        → item.nickname = 'にせの属性'
+ → エディタに赤波線               → 普通に表示される
+ → vue-tsc がエラー               → エラーなし、正常動作
+```
+
+**ブラウザが実行するのは JavaScript** や。TypeScript はブラウザに送られる前に全部 JavaScript に変換されて、**型情報は捨てられる**。やから `item.nickname` は JavaScript 的には「オブジェクトのプロパティにアクセスする」っちゅうだけの話で、API がちゃんと返してくれるから普通に動く。
+
+🙋 「じゃあ TypeScript のエラーなんて無視していいんですか？」
+
+🐘 「**絶対にアカン**。今は動いとるけど、これは **将来壊れる爆弾** や。例えばな:」
+
+```ts
+// 今日: 動く（API が nickname を返してるから）
+{{ item.nickname }}
+
+// 1ヶ月後: 誰かが「nickname いらんな」と $appends から消す
+// → API はもう nickname を返さない
+// → item.nickname は undefined になる
+// → ブラウザに何も表示されない（エラーにもならない）
+
+// さらにこう書いてたら…
+item.nickname.toUpperCase()
+// → 💥 Cannot read property 'toUpperCase' of undefined
+// → アプリがクラッシュ
+```
+
+🙋 「うわ…**動いてるから安心してたのに、ある日突然壊れる**…」
+
+🐘 「そや。TypeScript は **『今は動くけど将来壊れるコード』を事前に見つけてくれる存在** なんや。赤波線が出たら『今動いてるからええやろ』やなくて、**『仕組みが壊れとるサイン』** として受け取れ」
+
+> 💀 ワシの教え子のメフィストフェレスくんが「**人間は何かを忘れた瞬間に堕落する**」言うてたな。お前は今、`generate:types` を1回忘れただけで、タスク2 で築いた **「型は降ってくる」っちゅう真実** を裏切ってしもうた。しかも **ブラウザが動いとるから気づかん** っちゅう最悪のパターンや。
 
 ### 戻す
 

@@ -14,6 +14,7 @@ return new class extends Migration
             $table->unsignedInteger('quantity')->default(1);
             $table->text('memo')->nullable();
             $table->boolean('purchased')->default(false);
+            $table->integer('priority')->default(1);
             $table->timestamps();
         });
     }

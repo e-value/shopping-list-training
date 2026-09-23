@@ -6,11 +6,32 @@
 
 ### 前回までのおさらい（ガネーシャ × お前）
 
-🙋 「先生！task-2 でパイプライン組めました！Scramble が `api.json` 吐いて、`openapi-typescript` が `api.d.ts` を生成して、フロントは `components['schemas']['Item']` を参照する形に置き換え終わりました！」
+🙋 「先生！task-2 でパイプライン組めました！」
 
-🐘 「おお、組み上げたな。手書きの `interface Item` も全部捨てたか？」
+🐘 「おお。ほな、お前が今どういう状態か、コードで振り返ってみよか。まず `resources/js/types/item.ts` 開いてみい」
 
-🙋 「捨てました！もう手書きの型はゼロです！」
+```ts
+// resources/js/types/item.ts — task-2 で書き換えた3行
+import type { components } from './api'
+
+export type Item = components['schemas']['Item']
+```
+
+🐘 「task-1 で8行もあった手書きの `interface Item { id: number; product_name: string; ... }` を捨てて、**自動生成された `api.d.ts` の型を参照するだけ** に変えたんやったな」
+
+🙋 「はい！`sail npm run generate:types` を叩くと `api.d.ts` が生成されて、`Item` 型が勝手に更新されるんですよね」
+
+🐘 「そうや。仕組みはこういう流れや:」
+
+```
+Scramble が Laravel のコードを読む → /docs/api.json を出力
+    ↓
+sail npm run generate:types
+    ↓
+openapi-typescript が api.json → api.d.ts に変換
+    ↓
+item.ts は api.d.ts の Item をそのまま参照
+```
 
 🐘 「ええやんけ。…ところでお前、その仕組み、**ホンマに強いんか？** まだ実感してへんやろ？」
 
@@ -18,9 +39,19 @@
 
 🐘 「動いとるのは、まだ **何も変えてへんから** や。本番はな、**バックエンド側でカラムが1個増えたとき** や。タスク1 の手書き時代のお前なら、Item に新しいカラムを足したら何箇所、手で直さなアカンかった？」
 
-🙋 「えーと、interface に1行、一覧画面の表示に1箇所、詳細画面に1箇所、追加フォームに1箇所…たぶん4〜5箇所…？」
+🙋 「えーと…」
 
-🐘 「そや。**しかも漏れたら誰も教えてくれへん** 世界やった。今のお前は違う。**自分の指、何箇所動くか数えてみい**」
+```
+① resources/js/types/item.ts  — interface に1行追加
+② resources/js/api/items.ts   — createItem の引数型を修正
+③ resources/js/views/ItemListView.vue  — 一覧画面の表示を追加
+④ resources/js/views/ItemDetailView.vue — 詳細画面の表示を追加
+⑤ ItemListView.vue の追加フォーム — 入力欄を追加
+```
+
+🙋 「…5箇所ですね」
+
+🐘 「そや。**しかも ① を忘れたら、②〜⑤ を完璧に書いても TS はエラーを出さん**。手書き interface が嘘ついとるだけやからな。今のお前のパイプラインなら ① は自動や。**自分の指、何箇所動くか数えてみい**」
 
 🙋 「（ゴクリ）数えるんですか…？」
 

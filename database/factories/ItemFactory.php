@@ -21,6 +21,7 @@ class ItemFactory extends Factory
             'quantity' => fake()->numberBetween(1, 5),
             'memo' => fake()->optional(0.3)->sentence(),
             'purchased' => fake()->boolean(20),
+            'priority' => fake()->numberBetween(1, 5),
         ];
     }
 }

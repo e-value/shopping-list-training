@@ -6,7 +6,7 @@
 
 ### 前回までのおさらい（ガネーシャ × お前）
 
-🙋 「先生！task-2 でパイプライン組めました！Scramble が `api.json` 吐いて、`openapi-typescript` が `schema.d.ts` を生成して、フロントは `components['schemas']['Item']` を参照する形に置き換え終わりました！」
+🙋 「先生！task-2 でパイプライン組めました！Scramble が `api.json` 吐いて、`openapi-typescript` が `api.d.ts` を生成して、フロントは `components['schemas']['Item']` を参照する形に置き換え終わりました！」
 
 🐘 「おお、組み上げたな。手書きの `interface Item` も全部捨てたか？」
 
@@ -75,71 +75,89 @@ sail artisan migrate:fresh --seed
 プロジェクトルート/
 ├── app/
 │   └── Models/
-│       └── Item.php                    # ② $fillable / $casts に priority を追加
+│       └── Item.php                    # ③ $fillable / $casts に priority を追加
 ├── database/
+│   ├── factories/
+│   │   └── ItemFactory.php             # ② Factory に priority を追加
 │   └── migrations/
-│       └── <タイムスタンプ>_add_priority_to_items_table.php   # ① ★ 新規生成（artisan）
+│       └── <タイムスタンプ>_create_items_table.php   # ① 既存 migration に priority カラムを追加
 └── resources/
     └── js/
         ├── api/
-        │   └── items.ts                # ⑤ createItem の引数型に priority を追加
+        │   └── items.ts                # ⑥ createItem の引数型に priority を追加
         ├── types/
-        │   └── api.d.ts                # ④ generate:types で priority が自動反映
+        │   └── api.d.ts                # ⑤ generate:types で priority が自動反映
         └── views/
-            ├── ItemListView.vue        # ⑥ 一覧 template に表示
-            └── ItemDetailView.vue      # ⑦ 詳細 template に表示
+            ├── ItemListView.vue        # ⑦ 一覧 template に表示
+            └── ItemDetailView.vue      # ⑧ 詳細 template に表示
 ```
 
-> 💡 番号は実装順とほぼ対応しとる。**「DB → Model → 型 → 画面」っちゅう一方通行の流れ** や。タスク1の手書き時代は ④ も手作業で漏れる可能性があったけど、今は **自動で降りてくる**。これが今回体感する「気持ちよさ」の正体や。
+> 💡 番号は実装順とほぼ対応しとる。**「DB → Model → 型 → 画面」っちゅう一方通行の流れ** や。タスク1の手書き時代は ⑤ も手作業で漏れる可能性があったけど、今は **自動で降りてくる**。これが今回体感する「気持ちよさ」の正体や。
 
 ---
 
 ## ✏️ 実装手順
 
-### Step 1: migration ファイルを生成
+### Step 1: migration を編集
 
-```bash
-sail artisan make:migration add_priority_to_items_table --table=items
-```
+タスク1のウォーミングアップで `product_name` → `name` に変えたやろ？あれと同じ要領や。**開発フェーズでは元の migration を直接編集して `migrate:fresh`** するのが手っ取り早い。
 
-`database/migrations/<タイムスタンプ>_add_priority_to_items_table.php` っちゅうファイルが生成されるはずや。
-
-> 💡 `--table=items` っちゅうオプション、これな、Laravel に「items テーブルを変更する migration やで」と伝える指示や。ファイルの中身が最初から `Schema::table('items', ...)` で書かれてるから、お前はカラム追加の中身だけ書き足せばええ。
-> ワシの教え子のミケランジェロくんもな、彫刻を始める前に「この大理石はどんな彫刻になりたがってるか」を見たって言うやろ？migration 作成時にテーブル名を指定するのも同じや、最初から正しいフォーマットで始められる。
-
-### Step 2: migration を編集
-
-生成されたファイルを開いて、`up()` と `down()` を以下のように書く:
+`database/migrations/<タイムスタンプ>_create_items_table.php` を開いて、`priority` カラムを追加:
 
 ```php
 public function up(): void
 {
-    Schema::table('items', function (Blueprint $table) {
-        $table->integer('priority')->default(1);   // 1〜5、デフォルトは1
-    });
-}
-
-public function down(): void
-{
-    Schema::table('items', function (Blueprint $table) {
-        $table->dropColumn('priority');
+    Schema::create('items', function (Blueprint $table) {
+        $table->id();
+        $table->string('product_name');
+        $table->unsignedInteger('quantity')->default(1);
+        $table->text('memo')->nullable();
+        $table->boolean('purchased')->default(false);
+        $table->integer('priority')->default(1);            // ← 追加: 1〜5、デフォルトは1
+        $table->timestamps();
     });
 }
 ```
 
-ポイント:
-- `default(1)` を入れとくことで、既存レコードに対しても自動で 1 が入る（NOT NULL エラーを避けるため）
-- `down()` も忘れずに書く。**「戻せる migration」を書くのは習慣にしときや**
+> 💡 `default(1)` を入れとくことで、priority を指定せずに作ったアイテムにも自動で 1 が入るで。
 
-### Step 3: migrate を実行
+### Step 2: Factory を更新
+
+migration を直したら **Factory も合わせる**。タスク1でもやったな、「スキーマ変えたら Factory も連動して直す」の復習や。
+
+`database/factories/ItemFactory.php` の `definition()` に `priority` を追加:
+
+```php
+public function definition(): array
+{
+    return [
+        'product_name' => fake()->randomElement([
+            '牛乳', '卵', '食パン', 'バナナ', 'りんご',
+            'トマト', 'キャベツ', '鶏肉', '豚肉', '米',
+            'ヨーグルト', 'チーズ', '玉ねぎ', 'じゃがいも',
+        ]),
+        'quantity' => fake()->numberBetween(1, 5),
+        'memo' => fake()->optional(0.3)->sentence(),
+        'purchased' => fake()->boolean(20),
+        'priority' => fake()->numberBetween(1, 5),          // ← 追加: 1〜5 のランダム値
+    ];
+}
+```
+
+これでシードデータにもランダムな優先度が入るようになる。
+
+### Step 3: DB を作り直す
+
+migration を直接編集したから、DB をゼロから作り直すで:
 
 ```bash
-sail artisan migrate
+sail artisan migrate:fresh --seed
 ```
 
-`✓ Migrating: <ファイル名>` → `✓ Migrated` が出たら成功や。DB の `items` テーブルに `priority` カラムが追加された。
+`Dropped all tables successfully.` → `Migration table created successfully.` → シーダーの実行、と流れたら成功や。ブラウザでリロードして、アイテムが表示されることを確認してな。
 
-> 💡 ところでお前、今 DB がどんな状態か知りたなったら `sail artisan migrate:status` 打ってみい。マイグレーション一覧と各々の状態（Ran / Pending）が見えるで。
+> 💡 `migrate:fresh --seed` は「全テーブルを落として → 全 migration を最初から実行 → Seeder でテストデータ投入」を一気にやるコマンドや。開発中はしょっちゅう使うから覚えといてな。
+> ⚠️ **本番環境では絶対に使ったらアカンで**。全データが消えるからな。あくまで開発用のコマンドや。
 
 ### Step 4: Model を更新
 
@@ -398,7 +416,8 @@ sail npx vue-tsc --noEmit
 
 ## ✅ 完了基準
 
-- [ ] migration ファイルを生成・編集して `sail artisan migrate` が成功
+- [ ] 既存の migration に `priority` カラムを追加し、`sail artisan migrate:fresh --seed` が成功
+- [ ] `database/factories/ItemFactory.php` に `priority` を追加
 - [ ] `app/Models/Item.php` の `$fillable` / `$casts` に `priority` 追加
 - [ ] `npm run generate:types` で `api.d.ts` の `Item` に `priority: number` が増えている
 - [ ] `ItemListView.vue` / `ItemDetailView.vue` で `priority` が表示されている

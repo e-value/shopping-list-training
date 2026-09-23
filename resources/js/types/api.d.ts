@@ -44,17 +44,46 @@ export interface components {
         Item: {
             id: number;
             product_name: string;
-            quantity: number;
+            quantity: string;
             memo: string | null;
             purchased: boolean;
+            priority: number;
             /** Format: date-time */
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
-            priority: number;
+        };
+        /** ItemStoreRequest */
+        ItemStoreRequest: {
+            product_name: string;
+            quantity: number;
+            memo?: string | null;
+        };
+        /** ItemUpdateRequest */
+        ItemUpdateRequest: {
+            product_name?: string;
+            quantity?: number;
+            memo?: string | null;
+            purchased?: boolean;
         };
     };
     responses: {
+        /** @description Validation error */
+        ValidationException: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    /** @description Errors overview. */
+                    message: string;
+                    /** @description A detailed description of each field that failed validation. */
+                    errors: {
+                        [key: string]: string[];
+                    };
+                };
+            };
+        };
         /** @description Not found */
         ModelNotFoundException: {
             headers: {
@@ -101,7 +130,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemStoreRequest"];
+            };
+        };
         responses: {
             201: {
                 headers: {
@@ -111,6 +144,7 @@ export interface operations {
                     "application/json": components["schemas"]["Item"];
                 };
             };
+            422: components["responses"]["ValidationException"];
         };
     };
     "items.show": {
@@ -147,7 +181,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ItemUpdateRequest"];
+            };
+        };
         responses: {
             /** @description `Item` */
             200: {
@@ -159,6 +197,7 @@ export interface operations {
                 };
             };
             404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "items.destroy": {

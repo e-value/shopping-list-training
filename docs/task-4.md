@@ -1,4 +1,4 @@
-# タスク4: 型再生成を「忘れる」仕組みを潰す（Husky + lint-staged）
+# タスク4: 型再生成を「忘れる」仕組みを潰す
 
 ## 🎯 このタスクのゴール
 
@@ -24,11 +24,7 @@
 
 🙋 「えっ、せっかく組み上げた仕組みが、最後の1コマンドを忘れるだけで台無しに…」
 
-🐘 「そや。やからな、**"覚えとこう" やのうて、"忘れても勝手に走る" 状態** を作るんや。今日はそれを **git の pre-commit フック** で実現するで」
-
-🙋 「git のフック…？」
-
-🐘 「`git commit` を打った瞬間、裏で自動でコマンドが走る仕掛けや。お前がバックエンドの PHP を変更した commit を打つと、**勝手に `generate:types` が走って型が更新される**。お前はもう **コマンドを覚えてなくてええんやで**」
+🐘 「そや。やからな、**"覚えとこう" やのうて、"忘れても勝手に走る" 状態** を作るんや。今日はそれを **2つの仕掛け** で実現するで」
 
 ---
 
@@ -43,7 +39,12 @@
 4. フロントで型補完が効く
 ```
 
-3 のコマンドを **git の pre-commit フックで自動化** する。バックエンドの PHP を変更した commit を打つ瞬間、自動で `generate:types` が走るようにするで。
+この 3 を **2つの仕掛けで自動化** する:
+
+| 仕掛け | いつ動く | 効果 |
+|---|---|---|
+| **ファイルウォッチャー** | 開発中、PHP を保存した瞬間 | 型がリアルタイムで更新される。ズレた型でコードを書く時間がゼロ |
+| **git hook** | `git commit` した瞬間 | ウォッチャーを起動し忘れていた場合の安全網 |
 
 > 💡 ワシの教え子のベンジャミン・フランクリンくんが「**An ounce of prevention is worth a pound of cure**（1オンスの予防は1ポンドの治療に値する）」言うてたな。「忘れたら直す」やのうて、「**忘れる余地を仕組みで潰す**」のが熟練エンジニアのやり方や。
 
@@ -72,21 +73,48 @@ sail artisan migrate:fresh --seed
 
 ## 👀 何を作るか
 
-たった2つの npm パッケージで実現する:
+今回使う道具は **たった1つの npm パッケージ** と **シェルスクリプト1ファイル** だけ:
 
-| パッケージ | 役割 |
+| 道具 | 役割 |
 |---|---|
-| **Husky** | git の「**フック**」（特定タイミングでスクリプトを走らせる仕組み）を簡単に管理できるツール |
-| **lint-staged** | git で **staged になっているファイル** に対してだけ、指定したコマンドを実行するツール |
+| **chokidar-cli** | ファイルの変更を監視して、指定したコマンドを自動実行する CLI ツール |
+| **.githooks/pre-commit** | git commit の直前に自動実行されるシェルスクリプト |
 
-組み合わせると:
-- git commit を実行する直前に Husky が発火
-- Husky が lint-staged を呼ぶ
-- lint-staged が「staged の中に `app/**/*.php` の変更があるか？」を見る
-- あれば `sail npm run generate:types` を実行
-- なければスキップ（不要な処理を走らせへん）
+> 💡 `concurrently` はタスク3の時点で既にインストール済みや。Vite とファイルウォッチャーを同時に動かすのに使う。
 
-**「PHP を変更した commit」のときだけ型再生成が自動で走る** っちゅう仕掛けが完成する。
+仕掛け①（ファイルウォッチャー）の流れ:
+
+```
+sail npm run dev
+  ├── vite            ← フロントの HMR（今までと同じ）
+  └── chokidar        ← app/**/*.php を監視
+        │
+        │  Item.php を保存 💾
+        ▼
+        generate:types が自動実行
+        ▼
+        api.d.ts が更新される
+        ▼
+        エディタの型補完も即座に更新 ✨
+```
+
+仕掛け②（git hook）の流れ:
+
+```
+git commit
+  │
+  ▼
+.githooks/pre-commit が自動実行
+  │
+  ▼
+generate:types が走る
+  │
+  ▼
+api.d.ts が更新され、差分があれば自動で staged に追加
+  │
+  ▼
+commit 完了（型ファイルも一緒にコミットされる）
+```
 
 ---
 
@@ -153,210 +181,244 @@ sail artisan migrate:fresh --seed
 2. `ItemListView.vue` から `{{ item.nickname }}` の行を削除
 3. `sail npm run generate:types` を実行して `api.d.ts` も元に戻す
 
-ここまでクリーンになったら、Husky 導入に進む。
+ここまでクリーンになったら、実装に進む。
 
 ---
 
 ## ✏️ 実装手順
 
-### ⚠️ 事前確認: ホストに Node.js が入っとるか
+### 仕掛け①: ファイルウォッチャー（開発中の自動化）
 
-今回のタスクは **これまでと違って、ホスト（お前の Mac）側で npm コマンドを動かす** で。理由は後で説明するけど、まず確認:
-
-```bash
-node -v
-npm -v
-```
-
-バージョンが表示されたら OK（**v20 以上が望ましい**。Node 18 は 2025年4月で EOL、しかも後で使う `lint-staged` の依存が `node:util.styleText`（Node 20.12+ の API）を要求するので、commit したタイミングで爆発するで）。`command not found` やったら macOS なら **`brew install node`** で入れる。
-
-> 💡 これまで `sail npm` でコンテナ内の Node.js を使うてきた。なんで今回はホスト側？っちゅう答えは Step 3 の解説で。
-
-### Step 1: Husky と lint-staged をインストール
+#### Step 1: chokidar-cli をインストール
 
 ```bash
-npm install -D husky lint-staged
+sail npm install -D chokidar-cli
 ```
 
-`-D` は devDependencies に入れる指定。開発時にしか使わんパッケージやから本番ビルドには含めん。
+`chokidar-cli` は **ファイルの変更を監視して、変更があったらコマンドを自動実行する** ツールや。OS のファイル監視 API（macOS なら FSEvents、Linux なら inotify）を使うから、CPU をほぼ使わず軽い。
 
-### Step 2: Husky を初期化
+> 💡 実は **Vite 自身も内部で chokidar を使っとる**。ファイル監視のデファクトスタンダードやから、信頼して使ってええ。`chokidar-cli` はそのコマンドライン版。
 
-```bash
-npx husky init
-```
+#### Step 2: `package.json` の `scripts` を書き換える
 
-このコマンドで以下が起きる:
-- プロジェクトルートに **`.husky/` ディレクトリ** が作成される
-- その中に **`pre-commit`** っちゅうサンプルファイルが生成される
-- `package.json` の `scripts.prepare` に `husky` が追加される（`npm install` 時にフックを自動セットアップしてくれる）
-
-位置関係はこれや。プロジェクトルート（`resources/` や `app/` と同じ階層）に `.husky/` ができる:
-
-```
-プロジェクトルート/
-├── .husky/                          ← ★ 新規ディレクトリ
-│   └── pre-commit                   ← ★ サンプルファイル（Step 3 で書き換える）
-├── app/
-├── database/
-├── resources/
-├── routes/
-├── package.json                     # ← scripts.prepare に "husky" が追加される
-└── ...
-```
-
-> 💡 `.husky/` は先頭にドット（`.`）が付くので **隠しディレクトリ扱い** や。`ls` だけだと見えへんから、`ls -la` で確認するんやで。
-
-確認:
-
-```bash
-ls -la .husky/
-cat .husky/pre-commit
-```
-
-`pre-commit` の中身は最初こんな感じ:
-
-```bash
-npm test
-```
-
-これは「**commit する直前に `npm test` を実行する**」っちゅうデフォルト設定。**今回は `lint-staged` を呼ぶように書き換える** で。
-
-### Step 3: pre-commit フックを書き換え
-
-Step 2 で `npx husky init` した直後、`.husky/pre-commit` の中身は **`npm test`**（デフォルト値）になっとる。これを **`npx lint-staged` に置き換える** で:
-
-**書き換え方法は2つ**。やりやすい方でええ:
-
-#### 方法A: エディタで開いて編集
-
-VS Code 等で `.husky/pre-commit` を開く → 中身の **`npm test`** を削除 → **`npx lint-staged`** に置き換え → **`Cmd + S` で保存**
-
-#### 方法B: ターミナルで一発置き換え
-
-```bash
-echo "npx lint-staged" > .husky/pre-commit
-```
-
-これでファイル丸ごと上書きされる（リダイレクト `>` の効果）。エディタを開く必要なし。
-
-#### 確認
-
-```bash
-cat .husky/pre-commit
-```
-
-出力が **`npx lint-staged`** になっとれば OK。
-
-「**commit 直前に lint-staged を実行してくれ**」っちゅう指示や、たったの1行。
-
-### Step 4: lint-staged の設定を `package.json` に書く
-
-`package.json` を開いて、**ルート階層（"scripts" と同じレベル）** に `lint-staged` っちゅうキーを追加:
+`package.json` を開いて、`scripts` の `dev` を以下のように変更:
 
 ```json
 {
   "scripts": {
     "build": "vite build",
-    "dev": "vite",
-    "generate:types": "openapi-typescript http://laravel.test/docs/api.json -o resources/js/types/api.d.ts",
-    "prepare": "husky"
-  },
-  "lint-staged": {
-    "app/**/*.php": [
-      "./vendor/bin/sail npm run generate:types"
-    ]
-  },
-  // ... 他の設定はそのまま
+    "dev": "concurrently -n vite,types \"vite\" \"SHELL=/bin/sh chokidar 'app/**/*.php' -c 'npm run generate:types' --initial --debounce 500\"",
+    "generate:types": "openapi-typescript http://laravel.test/docs/api.json -o resources/js/types/api.d.ts"
+  }
 }
 ```
 
-意味:
-- **キー** `"app/**/*.php"`: 「staged されとるファイルのうち、`app/` 配下の `.php` にマッチするもの」
-- **値** `["./vendor/bin/sail npm run generate:types"]`: マッチが1つでもあれば実行するコマンドの配列
+変更したのは **`dev` スクリプトだけ** や。`build` と `generate:types` はそのまま。
 
-つまり **`app/` 配下の PHP ファイルが staged されとる commit のときだけ、`generate:types` が走る** っちゅう挙動になる。
+各パーツの意味:
 
-> 💡 なんで `app/**/*.php` 限定にするか？ 例えば **resources/views/ の Blade ファイルを変更しただけ** やと、OpenAPI 仕様には影響せん。**型再生成の必要があるのは Model や Controller、つまり `app/` 配下** に絞れる。**「必要な時だけ走る」のが lint-staged のキモ** や。
+| パーツ | 意味 |
+|---|---|
+| `concurrently -n vite,types` | 2つのプロセスを同時に起動する。`-n` はログに表示する名前 |
+| `"vite"` | 今まで通りのフロント開発サーバー |
+| `SHELL=/bin/sh` | Docker コンテナ内でシェルを明示的に指定（コンテナでは `$SHELL` 環境変数が未設定のため必要） |
+| `chokidar 'app/**/*.php'` | `app/` 配下の全 PHP ファイルを監視 |
+| `-c 'npm run generate:types'` | 変更を検知したら実行するコマンド |
+| `--initial` | 監視開始時にも1回実行する（起動直後に型を最新にする） |
+| `--debounce 500` | 500ms 以内の連続変更は1回にまとめる（保存を連打しても大丈夫） |
 
-### Step 5: 動作確認
+🙋 「なんで `app/**/*.php` だけ監視するんですか？」
 
-実際に「PHP を変更して commit する」を試して、フックが発火するか見るで。
+🐘 「ええ質問や。OpenAPI の仕様に影響するんは **Model や Controller、つまり `app/` 配下の PHP** や。`resources/views/` の Blade を変えても API 仕様は変わらんし、`database/` の migration ファイルを変えても API 仕様は変わらん。**必要なときだけ走る** のがポイントや」
 
-#### 5-1. `app/Models/Item.php` の `$casts` を **見た目に変化が出る形** で変更してみる
+#### Step 3: 動作確認
 
-例えば `quantity` を `'integer'` から `'string'` に変えると、`api.d.ts` の `Item.quantity` が `number` → `string` に変わるんで、**目に見える効果** が出る:
+```bash
+sail npm run dev
+```
+
+ターミナルにこんな出力が出る:
+
+```
+[vite] VITE v8.x.x  ready in ...
+[types] Watching "app/**/*.php" ..
+[types] > generate:types が実行される（--initial の効果）
+```
+
+`[vite]` と `[types]` のプレフィックスで、どちらのプロセスの出力か分かるようになっとる。
+
+**次に、別のターミナルを開いて** `app/Models/Item.php` の `$casts` を変更してみる:
 
 ```php
 protected $casts = [
-    'quantity' => 'string',     // ← 'integer' から 'string' に変更（後で戻す）
+    'quantity' => 'string',     // ← 'integer' から 'string' に変更（テスト用）
     'purchased' => 'boolean',
     'priority' => 'integer',
 ];
 ```
 
-#### 5-2. staged にして commit
+ファイルを **保存した瞬間**、`sail npm run dev` を動かしているターミナルに:
+
+```
+[types] change:app/Models/Item.php
+[types] > generate:types が実行される
+```
+
+`resources/js/types/api.d.ts` を開いて、`quantity` の型を確認:
+
+```bash
+grep 'quantity' resources/js/types/api.d.ts
+```
+
+`quantity?: string;` になっとれば、**PHP を保存しただけで型が自動更新された** 証拠や。
+
+🙋 「えっ、保存しただけで勝手に型が変わった…！コマンド何も打ってないのに！」
+
+🐘 「そういうことや。もう **`generate:types` を覚えてなくてもええ**。開発中は chokidar が常に見張っとるからな」
+
+**確認が済んだら `$casts` を元に戻す**:
+
+```php
+protected $casts = [
+    'quantity' => 'integer',     // ← 元に戻す
+    'purchased' => 'boolean',
+    'priority' => 'integer',
+];
+```
+
+保存すると、また自動で `generate:types` が走って `quantity` が `number` に戻る。
+
+> 💡 `sail npm run dev` は `Ctrl + C` で止められる。Vite と chokidar が両方止まるで。
+
+---
+
+### 仕掛け②: git hook（コミット時の安全網）
+
+ファイルウォッチャーは最高やけど、1つだけ弱点がある。**起動し忘れたら無力** っちゅうことや。
+
+🙋 「えっ、`sail npm run dev` を起動せずにコード書くことあります？」
+
+🐘 「あるんや。例えば typo の修正だけやから Vite いらんやろ、って dev を起動せずに直して commit する。そのとき PHP も触っとったら…型は古いままや。やから **commit の瞬間にもう1回チェックする安全網** を張る」
+
+#### Step 4: `.githooks/` ディレクトリとフックスクリプトを作成
+
+```bash
+mkdir -p .githooks
+```
+
+次に `.githooks/pre-commit` ファイルを作成する。**エディタで作ってもええし、ターミナルでもええ**:
+
+**方法A: エディタで作成**
+
+VS Code 等で `.githooks/pre-commit`（拡張子なし）を新規作成して、以下の内容を書いて保存:
+
+```bash
+#!/bin/sh
+
+# staged に app/ 配下の PHP ファイルがあるか確認
+if git diff --cached --name-only | grep -q '^app/.*\.php$'; then
+  echo "🔄 PHP の変更を検知。型を再生成します..."
+  ./vendor/bin/sail npm run generate:types
+  git add resources/js/types/api.d.ts
+  echo "✅ api.d.ts を更新しました"
+fi
+```
+
+**方法B: ターミナルで作成**
+
+```bash
+cat << 'EOF' > .githooks/pre-commit
+#!/bin/sh
+
+# staged に app/ 配下の PHP ファイルがあるか確認
+if git diff --cached --name-only | grep -q '^app/.*\.php$'; then
+  echo "🔄 PHP の変更を検知。型を再生成します..."
+  ./vendor/bin/sail npm run generate:types
+  git add resources/js/types/api.d.ts
+  echo "✅ api.d.ts を更新しました"
+fi
+EOF
+```
+
+作成したら **実行権限を付ける**。これを忘れるとフックが動かん:
+
+```bash
+chmod +x .githooks/pre-commit
+```
+
+スクリプトの意味:
+
+| 行 | やっていること |
+|---|---|
+| `#!/bin/sh` | 「このファイルはシェルスクリプトやで」という宣言 |
+| `git diff --cached --name-only` | staged されたファイルの一覧を取得 |
+| `grep -q '^app/.*\.php$'` | その中に `app/` 配下の PHP があるか確認（`-q` は結果を画面に出さない） |
+| `./vendor/bin/sail npm run generate:types` | Sail 経由で型を再生成 |
+| `git add resources/js/types/api.d.ts` | 更新された型ファイルを自動で staged に追加 |
+
+> 💡 `if` で囲んでいるのは、**PHP を変更していない commit では何もしない** ようにするため。例えば Vue ファイルだけ変えた commit で毎回 `generate:types` が走ったら無駄やろ？
+
+#### Step 5: git にフックの場所を教える
+
+git は **デフォルトで `.git/hooks/` を見に行く** んやけど、`.git/` の中身はリポジトリに commit できへん（`.git/` は git の管理用フォルダで、リポジトリの一部やないからな）。やから `.githooks/` に置いて、こう設定する:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+これで **git がフックを探しに行く場所が `.githooks/` に変わる**。この設定はこのリポジトリだけに効く（他のプロジェクトには影響せん）。
+
+> 💡 `git config core.hooksPath` の設定は `.git/config` に保存される。チームで使う場合は README に「`git config core.hooksPath .githooks` を実行してね」と書いておくのが定番や。
+
+#### Step 6: 動作確認
+
+`sail npm run dev` を **止めた状態** で試す（ウォッチャーが動いとったらどっちが効いたか分からんからな）。
+
+**6-1.** `app/Models/Item.php` の `$casts` を変更:
+
+```php
+protected $casts = [
+    'quantity' => 'string',     // ← 'integer' から 'string' に変更
+    'purchased' => 'boolean',
+    'priority' => 'integer',
+];
+```
+
+**6-2.** staged にして commit:
 
 ```bash
 git add app/Models/Item.php
-git commit -m "test: フック動作確認"
+git commit -m "test: git hook 動作確認"
 ```
 
-#### 5-3. 期待される動き
-
-ターミナルにこんな出力が出るはず:
+**6-3.** 期待される出力:
 
 ```
-✔ Preparing lint-staged...
-✔ Running tasks for staged files...
-  ✔ app/**/*.php — 1 file
-    ✔ ./vendor/bin/sail npm run generate:types
-✔ Applying modifications from tasks...
-✔ Cleaning up temporary files...
+🔄 PHP の変更を検知。型を再生成します...
 
-[okumura/task-4 xxxxxxx] test: フック動作確認
- 1 file changed, ...
+> generate:types
+> openapi-typescript http://laravel.test/docs/api.json -o resources/js/types/api.d.ts
+
+✅ api.d.ts を更新しました
+[okumura/task-4 xxxxxxx] test: git hook 動作確認
+ 2 files changed, ...
 ```
 
-つまり commit が完了する **直前に**:
-1. lint-staged が "app/**/*.php" のマッチを検知
-2. `generate:types` が自動実行（http://laravel.test/docs/api.json を取りに行って api.d.ts を更新）
-3. その後で commit が完了
+ポイントは **`2 files changed`** のところ。`Item.php` だけ staged したのに、フックが `api.d.ts` も自動で追加したから **2ファイル** になっとる。
 
-**お前は何もせんでも api.d.ts が最新になっとる** っちゅう状態や。
-
-#### 5-4. 結果を2つ確認
-
-**① ファイルが更新されたか（タイムスタンプ）**
+**6-4.** 中身を確認:
 
 ```bash
-ls -la resources/js/types/api.d.ts
+grep 'quantity' resources/js/types/api.d.ts
 ```
 
-時刻が「ついさっき」になっとれば、フックが走って `generate:types` が実行された証拠や。
+`quantity?: string;` になっとれば成功。**commit しただけで型が最新になっとる**。
 
-**② 中身が変わったか（コンテンツ）**
+🙋 「すごい！dev を起動してなくても、commit の瞬間に勝手に走ってくれる！」
 
-`api.d.ts` を開いて `Item.quantity` の行を見る:
+🐘 「そういうこっちゃ。開発中はウォッチャーがリアルタイムで守る。commit のときは git hook が最後の砦として守る。**二段構えで型のズレを構造的に潰した** っちゅうわけや」
 
-```ts
-Item: {
-  id: number;
-  product_name: string;
-  quantity: string;   // ← integer から string に変わっとる ✨
-  ...
-}
-```
-
-`number` から `string` に変わっとれば、**バックエンドの $casts 変更が型に正しく伝わった** っちゅうことや。
-
-🙋 「えっ、commit しただけで `api.d.ts` が勝手に更新されてる…！自分では `generate:types` 打ってないのに！」
-
-🐘 「そういうことや。もう **お前がコマンドを覚えてなくても、仕組みが勝手にやってくれる** んや。これが Husky + lint-staged の威力やで」
-
-#### 5-5. テストが済んだら戻す
-
-`$casts` の `quantity` を `'integer'` に戻して、もう一度 commit する:
+**6-5.** テストが済んだら元に戻す:
 
 ```php
 protected $casts = [
@@ -368,20 +430,20 @@ protected $casts = [
 
 ```bash
 git add app/Models/Item.php
-git commit -m "test: cast を元に戻してフック動作再確認"
+git commit -m "test: cast を元に戻して git hook 再確認"
 ```
 
-これで `api.d.ts` も `quantity: number` に戻る。**フックが今回も走った** ことが分かるし、**元の状態に戻った** ことも確認できる。
+今回も `2 files changed` になれば、フックがちゃんと動いとる証拠や。
 
-#### 5-6. 「動かなかった」場合のチェックリスト
+#### 「動かなかった」場合のチェックリスト
 
-- ホストに Node.js が入っとるか？ → `node -v` で確認
-- `npx husky init` でちゃんと `.husky/pre-commit` が作られとるか？
-- `pre-commit` の中身が **`npx lint-staged`**（sail なし）になっとるか？
-- `package.json` の `lint-staged` キーが正しい階層に書かれとるか？
-- Sail（Docker コンテナ）は起動しとるか？ → `./vendor/bin/sail ps` で確認
-- Vite の dev server は起動しとるか？ → `http://laravel.test/docs/api.json` が取得できる必要
-- 「`Current directory is not a git directory!`」っちゅうエラーが出たら、**ホストで実行されてない**（sail 経由で呼んでもうとる）可能性が高い
+| 症状 | 原因 | 対策 |
+|---|---|---|
+| フックが全く動かない | `core.hooksPath` が設定されていない | `git config core.hooksPath .githooks` を再実行 |
+| `permission denied` | 実行権限がない | `chmod +x .githooks/pre-commit` |
+| `sail: command not found` | パスが通っていない | スクリプト内を `./vendor/bin/sail` にする（済み） |
+| Docker 系のエラー | Sail が起動していない | `./vendor/bin/sail up -d` で起動してから commit |
+| PHP を変えたのに動かない | ファイルが `app/` 配下でない | `grep '^app/.*\.php$'` のパターンを確認 |
 
 ---
 
@@ -389,9 +451,9 @@ git commit -m "test: cast を元に戻してフック動作再確認"
 
 | 場面 | Before（タスク3完了時）| After（タスク4完了時）|
 |---|---|---|
-| バックエンドを変更して commit するとき | `sail npm run generate:types` を **手で叩く必要あり**、忘れたら型がズレる | **何もせんでええ**、commit が自動で走らせてくれる |
-| 型のズレ | 起こりうる（人間が忘れる）| **構造的に起こらん**（仕組みが防ぐ）|
-| チームで運用 | 「型再生成しといて」っちゅう注意喚起が必要 | **README にも書かんでええ**、git に組み込まれてる |
+| 開発中に PHP を保存 | 何も起きない。型は古いまま | **ウォッチャーが即座に型を再生成** |
+| commit するとき | `generate:types` を手で叩く必要あり。忘れたら型がズレる | **git hook が自動で走る。忘れる余地がない** |
+| 型のズレ | 起こりうる（人間が忘れる） | **構造的に起こらん**（仕組みが防ぐ） |
 
 > 💀 ワシの教え子のフォードくんが組立ラインで「**ヒューマンエラーは "人を責める" んやのうて "仕組みで防ぐ"**」を実証したやろ？お前が今やったのも同じや。**「気を付けます」じゃなく「仕組みが勝手にやる」** を選ぶのが熟練エンジニアの態度や。
 
@@ -399,11 +461,13 @@ git commit -m "test: cast を元に戻してフック動作再確認"
 
 ## ✅ 完了基準
 
-- [ ] `package.json` の `devDependencies` に `husky` と `lint-staged` が入っとる
-- [ ] `.husky/pre-commit` が存在し、`./vendor/bin/sail npx lint-staged` の1行が書かれとる
-- [ ] `package.json` に `lint-staged` キーがあり、`app/**/*.php` 変更時に `generate:types` を走らせる設定が入っとる
-- [ ] `app/` 配下の PHP ファイルを変更 → `git commit` → **自動で `generate:types` が走り** `api.d.ts` が更新される
-- [ ] `app/` 配下以外（例: resources の Blade ファイル）の変更だけの commit では `generate:types` は走らない
+- [ ] `package.json` の `devDependencies` に `chokidar-cli` が入っとる
+- [ ] `package.json` の `scripts.dev` が `concurrently` で Vite とファイルウォッチャーを同時起動する設定になっとる
+- [ ] `sail npm run dev` を起動した状態で `app/` 配下の PHP を保存 → **自動で `generate:types` が走り** `api.d.ts` が更新される
+- [ ] `.githooks/pre-commit` が存在し、実行権限がついとる
+- [ ] `git config core.hooksPath` が `.githooks` に設定されとる
+- [ ] `app/` 配下の PHP ファイルを変更 → `git commit` → **自動で `generate:types` が走り** `api.d.ts` も一緒にコミットされる
+- [ ] `app/` 配下以外（例: Vue ファイルだけ）の変更だけの commit では `generate:types` は走らない
 - [ ] ウォーミングアップで仕込んだ `$appends` などの実験コードは元に戻してある
 
 全部チェックついたか？お前、**「コマンド実行の権利」を仕組みに譲り渡した** で。
@@ -414,7 +478,7 @@ git commit -m "test: cast を元に戻してフック動作再確認"
 
 ```bash
 git add .
-git commit -m "task-4: Husky + lint-staged で型再生成を自動化"
+git commit -m "task-4: ファイルウォッチャー + git hook で型再生成を自動化"
 git push origin okumura/task-4   # ← 自分の作業ブランチ名やで
 ```
 

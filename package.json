@@ -4,27 +4,20 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite",
-    "generate:types": "openapi-typescript http://laravel.test/docs/api.json -o resources/js/types/api.d.ts",
-    "prepare": "husky"
+    "dev": "concurrently -n vite,types \"vite\" \"SHELL=/bin/sh chokidar 'app/**/*.php' -c 'npm run generate:types' --initial --debounce 500\"",
+    "generate:types": "openapi-typescript http://laravel.test/docs/api.json -o resources/js/types/api.d.ts"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
     "@types/node": "^26.6.2",
+    "chokidar-cli": "^3.0.0",
     "concurrently": "^9.0.1",
-    "husky": "^9.1.7",
     "laravel-vite-plugin": "^3.1",
-    "lint-staged": "^16.4.0",
     "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.9.3",
     "vite": "^8.0.0",
     "vue-tsc": "^3.3.11"
-  },
-  "lint-staged": {
-    "app/**/*.php": [
-      "./vendor/bin/sail npm run generate:types"
-    ]
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^6.0.6",

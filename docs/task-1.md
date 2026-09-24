@@ -129,6 +129,23 @@ git checkout -b okumura/task-1 origin/task-1       # ← 自分の名前に置�
 
 ---
 
+## 🚀 Sail と Vite を起動する
+
+ブランチを切ったら、まず **Sail（Docker）と Vite（フロント開発サーバー）** を起動するで。これがないとアプリが動かんからな:
+
+```bash
+sail up -d                # Docker コンテナを起動（バックグラウンドで動かす）
+sail npm run dev          # Vite 開発サーバーを起動（別のターミナルで実行）
+```
+
+こんな表示が出たら OK:
+
+![Sail と Vite の起動画面](images/sail-up-and-vite-dev.png)
+
+> 💡 `sail up -d` の `-d` は「バックグラウンドで起動」っちゅう意味。`sail npm run dev` は **フォアグラウンドで動き続ける** から、**別のターミナルタブ** を開いてこれ以降のコマンドを打つんやで。
+
+---
+
 ## 👀 まずは現状を確認
 
 ブラウザで `http://localhost:8081`（`.env` の `APP_PORT` に合わせてな）を開いてみい。買い物リストが表示されてるはずや。

@@ -105,6 +105,8 @@ sail npm run build              # フロントエンドをビルド
 
 ブラウザで `http://localhost:8081` を開いてみい（ポートは `.env` の `APP_PORT` に合わせてな）。買い物リストが表示されたら環境構築は完了や！ 🎉
 
+![ブラウザでの初期表示](images/task1-browser-initial.png)
+
 ---
 
 ## ⚠️ 最初にやること: AI の自動補完を切る

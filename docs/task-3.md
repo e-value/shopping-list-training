@@ -67,6 +67,23 @@ item.ts は api.d.ts の Item をそのまま参照
 
 ---
 
+## ⚠️ 最初にやること: AI の自動補完を切る
+
+このトレーニングでは **自分の手でコードを打つ** のが大事や。Cursor の AI 補完が有効やと、お前が考える前に答えが出てしもうて学習効果がなくなるからな。
+
+以下の手順で AI 補完を無効にするで:
+
+1. `Cmd + Shift + P` でコマンドパレットを開く
+2. `disa` と入力
+3. **Disable Cursor Tab** を選択（AI のインライン補完を無効化）
+4. もう一度 `Cmd + Shift + P` → `disa` → **Disable Fallback Models** を選択
+
+![Cursor の AI 補完を無効にする](images/disable-cursor-tab.png)
+
+> 💡 トレーニングが終わったら、同じ手順で `Enable Cursor Tab` / `Enable Fallback Models` で元に戻せるで。
+
+---
+
 ## 🌿 まず作業ブランチを切る
 
 タスク1, 2と同じリズムや。

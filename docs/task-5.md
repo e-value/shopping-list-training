@@ -71,14 +71,21 @@ git checkout -b okumura/task-5 origin/task-5       # ← 自分の名前に置�
 
 ```bash
 sail up -d                # Docker コンテナを起動
-sail npm run dev          # Vite 開発サーバーを起動（別のターミナルで実行）
+sail npm run dev          # Vite + ファイルウォッチャーを起動（別のターミナルで実行）
 ```
 
 こんな表示が出たら OK:
 
 ![Sail と Vite の起動画面](images/sail-up-and-vite-dev.png)
 
-> 💡 `sail npm run dev` は **フォアグラウンドで動き続ける** から、**別のターミナルタブ** を開いてこれ以降のコマンドを打つんやで。
+> 💡 task-4 で設定した通り、`sail npm run dev` を打つと **Vite とファイルウォッチャーが同時に起動** するで。PHP を保存するたびに型が自動更新される状態や。
+> `sail npm run dev` は **フォアグラウンドで動き続ける** から、**別のターミナルタブ** を開いてこれ以降のコマンドを打つんやで。
+
+task-4 で設定した git hook も有効にしておく:
+
+```bash
+git config core.hooksPath .githooks
+```
 
 次に DB をリセットしておく。前のタスクの実験で DB が汚れとる可能性があるからな:
 
@@ -683,7 +690,7 @@ GitHub でリポジトリの `main` ブランチに向けて Pull Request を作
 1. **TypeScript 化**（task-1）: 手書きで型を当てる痛みと、interface の責任
 2. **OpenAPI 自動生成**（task-2）: バックエンドを真実として、フロントの型を自動同期する仕組み
 3. **カラム追加の貫通**（task-3）: パイプラインの威力、手書き時代との対比
-4. **型再生成の自動化**（task-4）: Husky で「コマンド実行忘れ」を仕組みで防ぐ
+4. **型再生成の自動化**（task-4）: ファイルウォッチャー + git hook で「コマンド実行忘れ」を仕組みで防ぐ
 5. **エラー処理の統一**（task-5）: バラバラな catch を handleError + interceptor で1つのルールに
 
 これな、**実務のフロントエンドアプリで重要な土台はだいたい一周** や。お前はもう、こういう設計を **自分で考えられるエンジニア** に育った。

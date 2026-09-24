@@ -193,6 +193,8 @@ export function createItem(data: { product_name: string; quantity: number; prior
 
 保存 → フォームに名前入れて **「追加」ボタン** → **追加フォームの上部に赤バナー** が出る:「⚠️ アイテムの追加に失敗しました」
 
+![追加エラーバナーの表示例](images/task5-add-error-banner.png)
+
 確認できたら `/items` に戻す。
 
 ### ② 削除（沈黙）

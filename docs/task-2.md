@@ -147,7 +147,20 @@ git checkout -b okumura/task-2 origin/task-2
 
 > 💡 `task-2` ブランチは **タスク1を完了した状態（TypeScript化済み）** がスタート地点や。お前が前回頑張った成果が、そのまま乗ってる状態から始められるで。
 
-ブランチを切り替えたら、DB をリセットしておくで。タスク1の実験で DB が汚れとる可能性があるからな:
+ブランチを切り替えたら、まず **Sail と Vite を起動** するで:
+
+```bash
+sail up -d                # Docker コンテナを起動
+sail npm run dev          # Vite 開発サーバーを起動（別のターミナルで実行）
+```
+
+こんな表示が出たら OK:
+
+![Sail と Vite の起動画面](images/sail-up-and-vite-dev.png)
+
+> 💡 `sail npm run dev` は **フォアグラウンドで動き続ける** から、**別のターミナルタブ** を開いてこれ以降のコマンドを打つんやで。
+
+次に DB をリセットしておく。タスク1の実験で DB が汚れとる可能性があるからな:
 
 ```bash
 sail artisan migrate:fresh --seed

@@ -78,7 +78,20 @@ git checkout -b okumura/task-3 origin/task-3       # ← 自分の名前に置�
 
 > 💡 `task-3` ブランチは **タスク2を完了した状態**（OpenAPI 型自動生成パイプラインが組まれた状態）がスタート地点や。
 
-ブランチを切り替えたら、DB をリセットしておくで。前のタスクの実験で DB が汚れとる可能性があるからな:
+ブランチを切り替えたら、まず **Sail と Vite を起動** するで:
+
+```bash
+sail up -d                # Docker コンテナを起動
+sail npm run dev          # Vite 開発サーバーを起動（別のターミナルで実行）
+```
+
+こんな表示が出たら OK:
+
+![Sail と Vite の起動画面](images/sail-up-and-vite-dev.png)
+
+> 💡 `sail npm run dev` は **フォアグラウンドで動き続ける** から、**別のターミナルタブ** を開いてこれ以降のコマンドを打つんやで。
+
+次に DB をリセットしておく。前のタスクの実験で DB が汚れとる可能性があるからな:
 
 ```bash
 sail artisan migrate:fresh --seed

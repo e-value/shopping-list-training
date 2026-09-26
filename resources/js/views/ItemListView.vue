@@ -1,10 +1,11 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { listItems, createItem, deleteItem } from '../api/items'
+import type { Item } from '../types/item'    // ← 追加（既存の import の下に）
 
-const items = ref([])
-const newName = ref('')
-const newQuantity = ref(1)
+const items = ref<Item[]>([])                 // ← ref([]) → ref<Item[]>([]) に変更
+const newName = ref<string>('')               // ← ref('') → ref<string>('') に変更
+const newQuantity = ref<number>(1)            // ← ref(1) → ref<number>(1) に変更
 
 async function loadItems() {
   const response = await listItems()
@@ -19,7 +20,7 @@ async function addItem() {
   await loadItems()
 }
 
-async function removeItem(item) {
+async function removeItem(item: Item) { 
   if (!confirm(`「${item.product_name}」を削除しますか？`)) return
   await deleteItem(item.id)
   await loadItems()

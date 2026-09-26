@@ -1,18 +1,20 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getItem, deleteItem } from '../api/items'
+import type { Item } from '../types/item'    // ← 追加
 
 const route = useRoute()
 const router = useRouter()
-const item = ref(null)
+const item = ref<Item | null>(null)           // ← ref(null) → ref<Item | null>(null) に変更
 
 async function loadItem() {
-  const response = await getItem(route.params.id)
+  const response = await getItem(Number(route.params.id))
   item.value = response.data
 }
 
 async function remove() {
+  if (!item.value) return   
   if (!confirm(`「${item.value.product_name}」を削除しますか？`)) return
   await deleteItem(item.value.id)
   router.push('/')

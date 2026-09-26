@@ -1,17 +1,18 @@
-import apiClient from './client';
+import type { Item } from '../types/item'
+import apiClient from './client'
 
 export function listItems() {
-  return apiClient.get('/items');
+  return apiClient.get<Item[]>('/items')
 }
 
-export function getItem(id) {
-  return apiClient.get(`/items/${id}`);
+export function getItem(id: number) {
+  return apiClient.get<Item>(`/items/${id}`)
 }
 
-export function createItem(data) {
-  return apiClient.post('/items', data);
+export function createItem(data: { product_name: string; quantity: number }) {
+  return apiClient.post<Item>('/items', data)
 }
 
-export function deleteItem(id) {
-  return apiClient.delete(`/items/${id}`);
+export function deleteItem(id: number) {
+  return apiClient.delete(`/items/${id}`)
 }

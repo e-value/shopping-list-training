@@ -9,7 +9,7 @@ const router = useRouter()
 const item = ref<Item | null>(null)           // ← ref(null) → ref<Item | null>(null) に変更
 
 async function loadItem() {
-  const response = await getItem(route.params.id)
+  const response = await getItem(Number(route.params.id))
   item.value = response.data
 }
 

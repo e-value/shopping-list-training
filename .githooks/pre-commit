@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# staged に app/ 配下の PHP ファイルがあるか確認
+if git diff --cached --name-only | grep -q '^app/.*\.php$'; then
+  echo "🔄 PHP の変更を検知。型を再生成します..."
+  ./vendor/bin/sail npm run generate:types
+  git add resources/js/types/api.d.ts
+  echo "✅ api.d.ts を更新しました"
+fi

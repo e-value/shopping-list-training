@@ -2,20 +2,20 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getItem, deleteItem } from '../api/items'
+import { handleError } from '../utils/handleError'
 import type { Item } from '../types/item'
 
 const route = useRoute()
 const router = useRouter()
 const item = ref<Item | null>(null)
+const error = ref<string | null>(null)
 
 async function loadItem() {
   try {
     const response = await getItem(Number(route.params.id))
     item.value = response.data
   } catch (e) {
-    if (confirm('読み込みに失敗しました。再試行しますか？')) {
-      loadItem()
-    }
+    error.value = handleError(e, 'アイテムの詳細取得')
   }
 }
 
@@ -30,6 +30,14 @@ onMounted(loadItem)
 </script>
 
 <template>
+  <!-- エラーバナー（追加）-->
+  <div
+    v-if="error"
+    class="mb-4 bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-xl"
+  >
+    ⚠️ {{ error }}
+  </div>
+
   <div v-if="item" class="space-y-4">
     <router-link to="/" class="inline-block text-pink-500 hover:underline text-sm">
       ← リストに戻る

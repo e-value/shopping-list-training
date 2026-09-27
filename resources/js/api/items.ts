@@ -9,7 +9,7 @@ export function getItem(id: number) {
   return apiClient.get<Item>(`/items/${id}`)
 }
 
-export function createItem(data: { product_name: string; quantity: number }) {
+export function createItem(data: { product_name: string; quantity: number; priority: number }) {
   return apiClient.post<Item>('/items', data)
 }
 

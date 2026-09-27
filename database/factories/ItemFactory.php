@@ -14,9 +14,20 @@ class ItemFactory extends Factory
     {
         return [
             'product_name' => fake()->randomElement([
-                '牛乳', '卵', '食パン', 'バナナ', 'りんご',
-                'トマト', 'キャベツ', '鶏肉', '豚肉', '米',
-                'ヨーグルト', 'チーズ', '玉ねぎ', 'じゃがいも',
+                '牛乳',
+                '卵',
+                '食パン',
+                'バナナ',
+                'りんご',
+                'トマト',
+                'キャベツ',
+                '鶏肉',
+                '豚肉',
+                '米',
+                'ヨーグルト',
+                'チーズ',
+                '玉ねぎ',
+                'じゃがいも',
             ]),
             'quantity' => fake()->numberBetween(1, 5),
             'memo' => fake()->optional(0.3)->sentence(),

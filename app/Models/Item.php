@@ -15,5 +15,6 @@ class Item extends Model
     protected $casts = [
         'quantity' => 'integer',
         'purchased' => 'boolean',
+        'priority' => 'integer',
     ];
 }

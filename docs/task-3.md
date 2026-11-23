@@ -477,14 +477,14 @@ sail npx vue-tsc --noEmit
 
 ## ✅ 完了基準
 
-- [ ] 既存の migration に `priority` カラムを追加し、`sail artisan migrate:fresh --seed` が成功
-- [ ] `database/factories/ItemFactory.php` に `priority` を追加
-- [ ] `app/Models/Item.php` の `$fillable` / `$casts` に `priority` 追加
-- [ ] `npm run generate:types` で `api.d.ts` の `Item` に `priority: number` が増えている
-- [ ] `ItemListView.vue` / `ItemDetailView.vue` で `priority` が表示されている
-- [ ] 追加フォームで `priority` を選んで新規追加できる
-- [ ] `sail npx vue-tsc --noEmit` がエラーなく通る
-- [ ] ブラウザで一覧/詳細/追加/削除が今まで通り動く
+- [✔︎] 既存の migration に `priority` カラムを追加し、`sail artisan migrate:fresh --seed` が成功
+- [✔︎] `database/factories/ItemFactory.php` に `priority` を追加
+- [✔︎] `app/Models/Item.php` の `$fillable` / `$casts` に `priority` 追加
+- [✔︎] `npm run generate:types` で `api.d.ts` の `Item` に `priority: number` が増えている
+- [✔︎] `ItemListView.vue` / `ItemDetailView.vue` で `priority` が表示されている
+- [✔︎] 追加フォームで `priority` を選んで新規追加できる
+- [✔︎] `sail npx vue-tsc --noEmit` がエラーなく通る
+- [✔︎] ブラウザで一覧/詳細/追加/削除が今まで通り動く
 
 全部チェックついたか？タスク3まで来たお前、もう半人前ちゃう、一人前や。
 

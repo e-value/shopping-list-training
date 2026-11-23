@@ -654,15 +654,15 @@ sail npx vue-tsc --noEmit
 
 ## ✅ 完了基準
 
-- [ ] `resources/js/utils/handleError.ts` を作成、`action` 引数で操作名を受け取り `〇〇に失敗しました（理由）` を返す純粋関数になっている
-- [ ] `resources/js/api/client.ts` に interceptor を追加、API エラーの統一ログが出る
-- [ ] `ItemListView.vue` の3つの catch がすべて `error.value = handleError(e, 'アイテムの〇〇')` に統一されている
-- [ ] `ItemListView.vue` から `addError` ref と追加フォーム内バナーが削除されている
-- [ ] `ItemDetailView.vue` も `handleError(e, 'アイテムの詳細取得')` で統一されている
-- [ ] `items.ts` の URL を一つずつ `/items-broken` に書き換えて、4操作とも **同じ赤バナー UI で操作ごとに違うメッセージ** が出る
-- [ ] DevTools Console に interceptor からの `[API error]` ログが出ている
-- [ ] `items.ts` を `/items` に戻したら今まで通り動く
-- [ ] `sail npx vue-tsc --noEmit` がエラーなく通る
+- [✔︎] `resources/js/utils/handleError.ts` を作成、`action` 引数で操作名を受け取り `〇〇に失敗しました（理由）` を返す純粋関数になっている
+- [✔︎] `resources/js/api/client.ts` に interceptor を追加、API エラーの統一ログが出る
+- [✔︎] `ItemListView.vue` の3つの catch がすべて `error.value = handleError(e, 'アイテムの〇〇')` に統一されている
+- [✔︎] `ItemListView.vue` から `addError` ref と追加フォーム内バナーが削除されている
+- [✔︎] `ItemDetailView.vue` も `handleError(e, 'アイテムの詳細取得')` で統一されている
+- [✔︎] `items.ts` の URL を一つずつ `/items-broken` に書き換えて、4操作とも **同じ赤バナー UI で操作ごとに違うメッセージ** が出る
+- [✔︎] DevTools Console に interceptor からの `[API error]` ログが出ている
+- [✔︎] `items.ts` を `/items` に戻したら今まで通り動く
+- [✔︎] `sail npx vue-tsc --noEmit` がエラーなく通る
 
 全部チェックついたか？バラバラを綺麗に整えたお前、もうフロントエンドの **設計屋** や。
 

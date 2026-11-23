@@ -822,13 +822,13 @@ sail npm run generate:types
 
 ## ✅ 完了基準
 
-- [ ] `dedoc/scramble` がインストール済み
-- [ ] `routes/web.php` の catch-all が `docs` も除外している
-- [ ] `package.json` に `generate:types` スクリプトがある
-- [ ] `npm run generate:types` で `resources/js/types/api.d.ts` が生成されている
-- [ ] `resources/js/types/item.ts` から手書きの interface が消え、生成型を re-export している
-- [ ] `sail npx vue-tsc --noEmit` がエラーなく通る
-- [ ] ブラウザで一覧/詳細/追加/削除が今まで通り動く
+- [✔︎] `dedoc/scramble` がインストール済み
+- [✔︎] `routes/web.php` の catch-all が `docs` も除外している
+- [✔︎] `package.json` に `generate:types` スクリプトがある
+- [✔︎] `npm run generate:types` で `resources/js/types/api.d.ts` が生成されている
+- [✔︎] `resources/js/types/item.ts` から手書きの interface が消え、生成型を re-export している
+- [✔︎] `sail npx vue-tsc --noEmit` がエラーなく通る
+- [✔︎] ブラウザで一覧/詳細/追加/削除が今まで通り動く
 
 🙋 「全部チェックつきました！」
 

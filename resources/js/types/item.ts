@@ -1,9 +1,3 @@
-export interface Item {
-  id: number
-  product_name: string
-  quantity: number
-  memo: string | null
-  purchased: boolean
-  created_at: string
-  updated_at: string
-}
+import type { components } from './api'              // ← 全て書き換え
+
+export type Item = components['schemas']['Item']     // ← 全て書き換え

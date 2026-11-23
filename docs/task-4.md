@@ -554,14 +554,14 @@ git commit -m "test: cast を元に戻して git hook 再確認"
 
 ## ✅ 完了基準
 
-- [ ] `package.json` の `devDependencies` に `chokidar-cli` が入っとる
-- [ ] `package.json` の `scripts.dev` が `concurrently` で Vite とファイルウォッチャーを同時起動する設定になっとる
-- [ ] `sail npm run dev` を起動した状態で `app/` 配下の PHP を保存 → **自動で `generate:types` が走り** `api.d.ts` が更新される
-- [ ] `.githooks/pre-commit` が存在し、実行権限がついとる
-- [ ] `git config core.hooksPath` が `.githooks` に設定されとる
-- [ ] `app/` 配下の PHP ファイルを変更 → `git commit` → **自動で `generate:types` が走り** `api.d.ts` も一緒にコミットされる
-- [ ] `app/` 配下以外（例: Vue ファイルだけ）の変更だけの commit では `generate:types` は走らない
-- [ ] ウォーミングアップで仕込んだ `$appends` などの実験コードは元に戻してある
+- [✔︎] `package.json` の `devDependencies` に `chokidar-cli` が入っとる
+- [✔︎] `package.json` の `scripts.dev` が `concurrently` で Vite とファイルウォッチャーを同時起動する設定になっとる
+- [✔︎] `sail npm run dev` を起動した状態で `app/` 配下の PHP を保存 → **自動で `generate:types` が走り** `api.d.ts` が更新される
+- [✔︎] `.githooks/pre-commit` が存在し、実行権限がついとる
+- [✔︎] `git config core.hooksPath` が `.githooks` に設定されとる
+- [✔︎] `app/` 配下の PHP ファイルを変更 → `git commit` → **自動で `generate:types` が走り** `api.d.ts` も一緒にコミットされる
+- [✔︎] `app/` 配下以外（例: Vue ファイルだけ）の変更だけの commit では `generate:types` は走らない
+- [✔︎] ウォーミングアップで仕込んだ `$appends` などの実験コードは元に戻してある
 
 全部チェックついたか？お前、**「コマンド実行の権利」を仕組みに譲り渡した** で。
 

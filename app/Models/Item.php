@@ -13,7 +13,7 @@ class Item extends Model
     protected $fillable = ['product_name', 'quantity', 'memo', 'purchased', 'priority'];
 
     protected $casts = [
-        'quantity' => 'string',
+        'quantity' => 'integer',
         'purchased' => 'boolean',
         'priority' => 'integer',
     ];

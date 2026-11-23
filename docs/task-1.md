@@ -794,13 +794,13 @@ ItemDetailView.vue:XX:XX - error TS2339: Property 'product_name' does not exist 
 
 ## ✅ 完了基準
 
-- [ ] `tsconfig.json` が存在し、`sail npx vue-tsc --noEmit` がエラーなく通る
-- [ ] `app.ts` / `client.ts` / `items.ts` / `router/index.ts` にリネーム済み
-- [ ] `.vue` ファイルすべてに `lang="ts"` が付いている
-- [ ] `interface Item` を `resources/js/types/item.ts` に定義した
-- [ ] `ref<Item[]>([])` のように型を使っている
-- [ ] API関数 (`listItems` 等) の返り値型が `Item[]` または `Item` になっている
-- [ ] ブラウザで一覧/追加/削除が今まで通り動く
+- [✔︎] `tsconfig.json` が存在し、`sail npx vue-tsc --noEmit` がエラーなく通る
+- [✔︎] `app.ts` / `client.ts` / `items.ts` / `router/index.ts` にリネーム済み
+- [✔︎] `.vue` ファイルすべてに `lang="ts"` が付いている
+- [✔︎] `interface Item` を `resources/js/types/item.ts` に定義した
+- [✔︎] `ref<Item[]>([])` のように型を使っている
+- [✔︎] API関数 (`listItems` 等) の返り値型が `Item[]` または `Item` になっている
+- [✔︎] ブラウザで一覧/追加/削除が今まで通り動く
 
 全部チェックついたか？さすガネーシャや！…と言いたいとこやけど、これは全部お前の手柄やで。よう頑張った。
 
